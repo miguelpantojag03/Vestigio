@@ -49,7 +49,7 @@ archivo-muerto/
     │   ├── RevivalZone.jsx           # Barra flotante drag-and-drop inferior
     │   ├── NewRelicModal.jsx         # Modal para crear un nuevo relic
     │   ├── Thumbnails.jsx            # Thumbnails CSS/SVG: Sketch · Copy · Palette · Branding · Notes · Parchment
-    │   └── UserMenu.jsx              # Dropdown de usuario: Profile · Settings · Sign out
+    │   └── UserMenu.jsx              # Dropdown de usuario: Settings · Sign out
     │
     ├── data/
     │   └── mockRelics.js             # Array de 5 relics demo (precargados para el usuario demo)

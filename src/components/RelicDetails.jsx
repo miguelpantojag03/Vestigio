@@ -560,12 +560,14 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
           <AIAnalysisBlock analysis={aiAnalysis} loading={aiLoading} onRequest={()=>onAnalyze?.(relic)}/>
 
           {/* actions */}
-          <button onClick={()=>onRevive(relic.id)}
-            style={{width:'100%',padding:'10px 0',borderRadius:8,border:'none',background:color.blue500,color:color.onPrimary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'background 0.12s'}}
-            onMouseEnter={e=>e.currentTarget.style.background=color.blue600}
-            onMouseLeave={e=>e.currentTarget.style.background=color.blue500}>
-            <RotateCcw size={13}/> {t('relicDetails.reviveNow')}
-          </button>
+          {!relic.revived && (
+            <button onClick={()=>onRevive(relic.id)}
+              style={{width:'100%',padding:'10px 0',borderRadius:8,border:'none',background:color.blue500,color:color.onPrimary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'background 0.12s'}}
+              onMouseEnter={e=>e.currentTarget.style.background=color.blue600}
+              onMouseLeave={e=>e.currentTarget.style.background=color.blue500}>
+              <RotateCcw size={13}/> {t('relicDetails.reviveNow')}
+            </button>
+          )}
           <button onClick={()=>onDelete(relic.id)}
             style={{width:'100%',padding:'10px 0',borderRadius:8,background:'transparent',color:color.textSecondary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer',border:`1px solid ${color.bgBorder}`,display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'border-color 0.12s,color 0.12s'}}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=color.terracotta500;e.currentTarget.style.color=color.terracotta500}}

@@ -169,7 +169,7 @@ Definida en `src/lib/validators.js` con Zod. Los schemas son **funciones factory
 | Factory | Campos | Reglas especiales |
 |---|---|---|
 | `getLoginSchema(t)` | email, password, remember | — |
-| `getRegisterSchema(t)` | fullName, email, password, confirmPassword, terms | Password: mín 8 chars, 1 mayúscula, 1 número, 1 especial · passwords iguales |
+| `getRegisterSchema(t)` | fullName, email, password, confirmPassword | Password: mín 8 chars, 1 mayúscula, 1 número, 1 especial · passwords iguales |
 | `getForgotSchema(t)` | email | — |
 | `getOnboardingSchema(t)` | projectName | Máx 40 chars |
 

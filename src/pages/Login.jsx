@@ -50,9 +50,10 @@ export default function Login() {
   async function handleGoogleSignIn() {
     setGoogleLoading(true)
     try {
-      await signInWithGoogle()
+      const session = await signInWithGoogle()
       push(t('auth.login.welcomeToast'), 'success')
-      navigate(from, { replace: true })
+      // Same first-run path as Register: a brand-new account names its project.
+      navigate(session.isNew ? '/onboarding' : from, { replace: true })
     } catch (err) {
       console.error('[Google sign-in]', err.code, err.message, err)
       const msg = {

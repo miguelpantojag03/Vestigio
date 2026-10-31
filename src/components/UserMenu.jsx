@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Settings, LogOut, User, Sliders } from 'lucide-react'
+import { Settings, LogOut, Sliders } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth }      from '../auth/AuthProvider.jsx'
@@ -35,7 +35,6 @@ export default function UserMenu({ user, onOpenSettings }) {
   }
 
   const ITEMS = [
-    { icon: <User size={13}/>,    label: t('userMenu.profile'),  action: ()=>setOpen(false), color: color.textPrimary },
     { icon: <Sliders size={13}/>, label: t('userMenu.settings'), action: handleSettings,     color: color.textPrimary },
     { divider: true },
     { icon: <LogOut size={13}/>,  label: t('userMenu.signOut'),  action: handleSignOut,      color: color.terracotta500 },

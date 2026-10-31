@@ -22,7 +22,6 @@ export function getRegisterSchema(t) {
       .regex(/[0-9]/, t('auth.validation.passwordNumber'))
       .regex(/[^A-Za-z0-9]/, t('auth.validation.passwordSpecial')),
     confirmPassword: z.string().min(1, t('auth.validation.confirmRequired')),
-    terms: z.literal(true, { errorMap: () => ({ message: t('auth.validation.termsRequired') }) }),
   }).refine(d => d.password === d.confirmPassword, {
     message: t('auth.validation.passwordsMismatch'),
     path: ['confirmPassword'],
@@ -47,7 +46,7 @@ export function getForgotSchema(t) {
 
 export function getOnboardingSchema(t) {
   return z.object({
-    projectName: z.string().min(1, t('auth.validation.projectNameRequired')).max(40),
+    projectName: z.string().trim().min(1, t('auth.validation.projectNameRequired')).max(40),
   })
 }
 

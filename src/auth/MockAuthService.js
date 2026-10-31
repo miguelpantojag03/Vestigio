@@ -117,7 +117,8 @@ const MockAuthService = {
     const users = storageGetLocal(USERS_KEY) || {}
     const key   = profile.email.toLowerCase()
     let record  = users[key]
-    if (!record) {
+    const isNew = !record
+    if (isNew) {
       record = {
         id:                    `user_google_${profile.sub}`,
         email:                 key,
@@ -137,7 +138,7 @@ const MockAuthService = {
     const session = makeSession(user, true) // persistent — no "remember me" concept in OAuth
     localStorage.setItem(SESSION_KEY, JSON.stringify(session))
     notifyListeners(session)
-    return session
+    return { ...session, isNew }
   },
 
   async signOut() {

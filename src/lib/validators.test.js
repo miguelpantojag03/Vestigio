@@ -31,7 +31,6 @@ describe('getRegisterSchema', () => {
     email: 'user@example.com',
     password: 'Abcdefg1!',
     confirmPassword: 'Abcdefg1!',
-    terms: true,
   }
 
   it('accepts a fully valid registration', () => {
@@ -60,11 +59,6 @@ describe('getRegisterSchema', () => {
 
   it('rejects mismatched password/confirmPassword', () => {
     const result = schema.safeParse({ ...base, confirmPassword: 'Different1!' })
-    expect(result.success).toBe(false)
-  })
-
-  it('rejects when terms is not accepted', () => {
-    const result = schema.safeParse({ ...base, terms: false })
     expect(result.success).toBe(false)
   })
 })

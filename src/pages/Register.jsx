@@ -51,7 +51,7 @@ export default function Register() {
   const registerSchema = useMemo(() => getRegisterSchema(t), [t])
   const { register, handleSubmit, control, formState: { errors } } = useForm({
     resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: '', email: '', password: '', confirmPassword: '', terms: false },
+    defaultValues: { fullName: '', email: '', password: '', confirmPassword: '' },
   })
 
   const password = useWatch({ control, name: 'password' })
@@ -111,18 +111,6 @@ export default function Register() {
           <PasswordInput register={register('confirmPassword')} placeholder={t('auth.register.confirmPasswordPlaceholder')}
             autoComplete="new-password" error={errors.confirmPassword} />
         </Field>
-
-        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', fontSize: 12, color: color.textSecondary }}>
-          <input type="checkbox" {...register('terms')}
-            style={{ accentColor: color.blue500, width: 14, height: 14, marginTop: 1 }} />
-          <span>
-            {t('auth.register.termsPrefix')} <span style={{ color: color.blue300 }}>{t('auth.register.termsOfService')}</span>{' '}
-            {t('auth.register.and')} <span style={{ color: color.blue300 }}>{t('auth.register.privacyPolicy')}</span>
-          </span>
-        </label>
-        {errors.terms && (
-          <span style={{ fontSize: 11, color: color.terracotta500, marginTop: -8 }}>{errors.terms.message}</span>
-        )}
 
         <GlobalError message={globalError} />
 

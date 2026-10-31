@@ -80,7 +80,7 @@ export default function Dashboard() {
   } = useProjects(user?.id)
 
   const {
-    relics, visible, selected, setSelectedId,
+    relics, projectRelics, visible, selected, setSelectedId,
     filter, setFilter, section, setSection,
     search, setSearch, sortField, sortDir, cycleSort,
     searchCategory, setSearchCategory, searchStatus, setSearchStatus,
@@ -256,7 +256,8 @@ export default function Dashboard() {
 
               {/* AI Insights */}
               <div style={{marginBottom:20}}>
-                <AIInsightsPanel relics={relics} onHighlight={focusRelic}/>
+                {/* Keyed by project: insights about another project's relics must not linger */}
+                <AIInsightsPanel key={currentProjectId} relics={projectRelics} onHighlight={focusRelic}/>
               </div>
 
               {/* Grid — responsive */}

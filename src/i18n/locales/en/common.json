@@ -58,10 +58,6 @@
       "passwordPlaceholder": "Create a strong password",
       "confirmPasswordLabel": "Confirm password",
       "confirmPasswordPlaceholder": "Repeat your password",
-      "termsPrefix": "I agree to the",
-      "termsOfService": "Terms of Service",
-      "and": "and",
-      "privacyPolicy": "Privacy Policy",
       "submit": "Create Account",
       "submitting": "Creating account…",
       "haveAccount": "Already have an account?",
@@ -94,7 +90,7 @@
     },
     "onboarding": {
       "title": "Name your first project",
-      "subtitle": "Every great archive starts with a project. You can add more later.",
+      "subtitle": "Vestigio keeps the ideas you set aside — your relics — so you can come back to them. Every archive starts with a project; you can add more later.",
       "projectNameLabel": "Project name",
       "projectNamePlaceholder": "e.g. Nebula System",
       "submit": "Start Archiving",
@@ -111,7 +107,6 @@
       "passwordNumber": "Include at least one number",
       "passwordSpecial": "Include at least one special character",
       "confirmRequired": "Please confirm your password",
-      "termsRequired": "You must accept the terms",
       "passwordsMismatch": "Passwords don't match",
       "projectNameRequired": "Project name is required"
     }
@@ -412,7 +407,6 @@
   },
   "userMenu": {
     "menuLabel": "User menu",
-    "profile": "Profile",
     "settings": "Settings",
     "signOut": "Sign out",
     "signedOutToast": "Signed out."

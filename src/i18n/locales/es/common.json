@@ -58,10 +58,6 @@
       "passwordPlaceholder": "Crea una contraseña fuerte",
       "confirmPasswordLabel": "Confirmar contraseña",
       "confirmPasswordPlaceholder": "Repite tu contraseña",
-      "termsPrefix": "Acepto los",
-      "termsOfService": "Términos de Servicio",
-      "and": "y",
-      "privacyPolicy": "la Política de Privacidad",
       "submit": "Crear cuenta",
       "submitting": "Creando cuenta…",
       "haveAccount": "¿Ya tienes una cuenta?",
@@ -94,7 +90,7 @@
     },
     "onboarding": {
       "title": "Nombra tu primer proyecto",
-      "subtitle": "Todo gran archivo empieza con un proyecto. Puedes agregar más después.",
+      "subtitle": "Vestigio guarda las ideas que descartaste —tus reliquias— para que puedas volver a ellas. Todo archivo empieza con un proyecto; puedes agregar más después.",
       "projectNameLabel": "Nombre del proyecto",
       "projectNamePlaceholder": "ej. Sistema Nebulosa",
       "submit": "Empezar a archivar",
@@ -111,7 +107,6 @@
       "passwordNumber": "Incluye al menos un número",
       "passwordSpecial": "Incluye al menos un carácter especial",
       "confirmRequired": "Confirma tu contraseña",
-      "termsRequired": "Debes aceptar los términos",
       "passwordsMismatch": "Las contraseñas no coinciden",
       "projectNameRequired": "El nombre del proyecto es obligatorio"
     }
@@ -412,7 +407,6 @@
   },
   "userMenu": {
     "menuLabel": "Menú de usuario",
-    "profile": "Perfil",
     "settings": "Ajustes",
     "signOut": "Cerrar sesión",
     "signedOutToast": "Sesión cerrada."

@@ -164,7 +164,7 @@ export function useRelics(userId, currentProjectId) {
   }, [update, relics])
 
   return {
-    relics, visible, selected, selectedId, setSelectedId,
+    relics, projectRelics, visible, selected, selectedId, setSelectedId,
     filter, setFilter,
     section, setSection,
     search, setSearch,

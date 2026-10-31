@@ -13,7 +13,7 @@
 | `/app` | `Dashboard.jsx` | `<ProtectedRoute>` | Dashboard principal |
 | `/*` | — | — | Redirige a `/login` |
 
-> *`/onboarding` es pública para que funcione tras el registro, antes de que exista sesión. Solo se accede via `navigate('/onboarding', { state })` desde Register.
+> *`/onboarding` es pública para que funcione tras el registro, antes de que exista sesión. Solo se accede via `navigate('/onboarding', { state })` desde Register, o desde Login tras el primer acceso con Google.
 
 ---
 
@@ -62,7 +62,7 @@ Estado de éxito inline  →  "Back to sign in"  →  /login
 ```
 Dashboard (Sidebar)
   │  Click en ⚙ (engranaje junto al usuario)
-  │  UserMenu desplegable: Profile · Settings · Sign out
+  │  UserMenu desplegable: Settings · Sign out
   │  Click "Sign out"  →  signOut() limpia localStorage/sessionStorage
   ▼
 /login  (+ toast de confirmación, traducido vía i18next)
@@ -167,7 +167,6 @@ Redirige a /app  (sin pasar por el formulario)
     ├── Relic Details: "Delete Forever" → confirmación → elimina relic
     │
     └── Sidebar: ⚙ → UserMenu
-                       ├── Profile   (no-op en demo)
                        ├── Settings  → idioma · tema · clave de IA · exportar
                        └── Sign out ─────────────────► /login
 ```

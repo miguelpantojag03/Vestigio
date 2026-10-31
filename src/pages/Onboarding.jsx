@@ -28,7 +28,7 @@ export default function Onboarding() {
   const onboardingSchema = useMemo(() => getOnboardingSchema(t), [t])
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(onboardingSchema),
-    defaultValues: { projectName: 'Nebula System' },
+    defaultValues: { projectName: '' },
   })
 
   async function onSubmit(data) {
