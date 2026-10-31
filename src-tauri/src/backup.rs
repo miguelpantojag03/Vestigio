@@ -11,9 +11,13 @@
 // during .setup(), before any frontend JS (and therefore before the sql
 // plugin's lazy connection) has run. No marker means an unfinished
 // restore: the leftovers are thrown away and the live data is untouched.
+//
+// Accounts live in the frontend's localStorage, out of reach of a clean
+// start, so they travel as a plain accounts.json the frontend writes on
+// export and picks up after a restore (see read_restore_result).
 
 use std::fs::{self, File};
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 use zip::write::SimpleFileOptions;
@@ -21,7 +25,9 @@ use zip::{CompressionMethod, ZipArchive, ZipWriter};
 
 const DB_FILENAME: &str = "archivo_muerto.db";
 const DATA_DIRS: [&str; 3] = ["attachments", "covers", "linked_copies"];
+const ACCOUNTS_FILENAME: &str = "accounts.json";
 const RESTORE_MARKER: &str = "restore.ready";
+const RESTORE_RESULT: &str = "restore.applied";
 const SQLITE_HEADER: &[u8; 16] = b"SQLite format 3\0";
 // Rollback journal files. A stale one would be replayed into the restored db.
 const DB_SIDECARS: [&str; 3] = ["-journal", "-wal", "-shm"];
@@ -65,10 +71,21 @@ fn add_dir_to_zip(zip: &mut ZipWriter<File>, dir: &Path, prefix: &str) -> Result
   Ok(())
 }
 
-fn write_backup_zip(local_dir: &Path, staging_db: &Path, zip_path: &Path) -> Result<(), String> {
+fn write_backup_zip(
+  local_dir: &Path,
+  staging_db: &Path,
+  accounts_json: &str,
+  zip_path: &Path,
+) -> Result<(), String> {
   let file = File::create(zip_path).map_err(|e| e.to_string())?;
   let mut zip = ZipWriter::new(file);
   add_file_to_zip(&mut zip, staging_db, DB_FILENAME.to_string())?;
+  zip
+    .start_file(ACCOUNTS_FILENAME, zip_options(accounts_json.len() as u64))
+    .map_err(|e| e.to_string())?;
+  zip
+    .write_all(accounts_json.as_bytes())
+    .map_err(|e| e.to_string())?;
   for name in DATA_DIRS {
     add_dir_to_zip(&mut zip, &local_dir.join(name), name)?;
   }
@@ -76,7 +93,12 @@ fn write_backup_zip(local_dir: &Path, staging_db: &Path, zip_path: &Path) -> Res
   Ok(())
 }
 
-fn export_to(local_dir: &Path, staging_db: &Path, dest_zip: &Path) -> Result<(), String> {
+fn export_to(
+  local_dir: &Path,
+  staging_db: &Path,
+  accounts_json: &str,
+  dest_zip: &Path,
+) -> Result<(), String> {
   // Written beside the destination first, so a failure can't leave a
   // truncated zip that looks like a backup, or destroy an older backup
   // the user chose to overwrite.
@@ -84,7 +106,7 @@ fn export_to(local_dir: &Path, staging_db: &Path, dest_zip: &Path) -> Result<(),
   partial.push(".partial");
   let partial = PathBuf::from(partial);
 
-  let result = write_backup_zip(local_dir, staging_db, &partial)
+  let result = write_backup_zip(local_dir, staging_db, accounts_json, &partial)
     .and_then(|()| fs::rename(&partial, dest_zip).map_err(|e| e.to_string()));
   if result.is_err() {
     let _ = fs::remove_file(&partial);
@@ -99,10 +121,16 @@ fn export_to(local_dir: &Path, staging_db: &Path, dest_zip: &Path) -> Result<(),
 pub async fn export_backup(
   app: AppHandle,
   staging_db_path: String,
+  accounts_json: String,
   dest_zip_path: String,
 ) -> Result<(), String> {
   let local_dir = app.path().app_local_data_dir().map_err(|e| e.to_string())?;
-  export_to(&local_dir, Path::new(&staging_db_path), Path::new(&dest_zip_path))
+  export_to(
+    &local_dir,
+    Path::new(&staging_db_path),
+    &accounts_json,
+    Path::new(&dest_zip_path),
+  )
 }
 
 fn pending_name(name: &str) -> String {
@@ -112,6 +140,7 @@ fn pending_name(name: &str) -> String {
 fn remove_pending(config_dir: &Path, local_dir: &Path) {
   let _ = fs::remove_file(config_dir.join(RESTORE_MARKER));
   let _ = fs::remove_file(config_dir.join(pending_name(DB_FILENAME)));
+  let _ = fs::remove_file(config_dir.join(pending_name(ACCOUNTS_FILENAME)));
   for name in DATA_DIRS {
     let _ = fs::remove_dir_all(local_dir.join(pending_name(name)));
   }
@@ -132,8 +161,8 @@ fn validate_backup(archive: &mut ZipArchive<File>) -> Result<(), String> {
 
 // Where a zip entry goes, or None for anything this app doesn't own.
 fn pending_dest(name: &str, config_dir: &Path, local_dir: &Path) -> Option<PathBuf> {
-  if name == DB_FILENAME {
-    return Some(config_dir.join(pending_name(DB_FILENAME)));
+  if name == DB_FILENAME || name == ACCOUNTS_FILENAME {
+    return Some(config_dir.join(pending_name(name)));
   }
   for dir in DATA_DIRS {
     if name == dir {
@@ -253,6 +282,11 @@ fn apply_restore(config_dir: &Path, local_dir: &Path) {
       eprintln!("[backup] could not restore {name}: {err}");
     }
   }
+  // Tells the frontend, once it starts, that it has a restore to finish.
+  let accounts = fs::read_to_string(config_dir.join(pending_name(ACCOUNTS_FILENAME))).unwrap_or_default();
+  if let Err(err) = fs::write(config_dir.join(RESTORE_RESULT), accounts) {
+    eprintln!("[backup] could not record the restore: {err}");
+  }
   remove_pending(config_dir, local_dir);
 }
 
@@ -264,13 +298,33 @@ pub fn apply_pending_restore(app: &AppHandle) {
   apply_restore(&config_dir, &local_dir);
 }
 
+fn read_result(config_dir: &Path) -> Option<String> {
+  fs::read_to_string(config_dir.join(RESTORE_RESULT)).ok()
+}
+
+/// The accounts.json of a restore applied on this startup ("" if the backup
+/// predates them), or null if there's nothing to finish.
+#[tauri::command]
+pub fn read_restore_result(app: AppHandle) -> Result<Option<String>, String> {
+  let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+  Ok(read_result(&config_dir))
+}
+
+/// Separate from reading it: if the frontend dies midway through finishing
+/// the restore, it gets to try again on the next start.
+#[tauri::command]
+pub fn clear_restore_result(app: AppHandle) -> Result<(), String> {
+  let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+  fs::remove_file(config_dir.join(RESTORE_RESULT)).map_err(|e| e.to_string())
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
-  use std::io::Write;
   use std::sync::atomic::{AtomicU32, Ordering};
 
   static NEXT: AtomicU32 = AtomicU32::new(0);
+  const ACCOUNTS: &str = r#"{"a@b.c":{"id":"u1","email":"a@b.c"}}"#;
 
   struct Sandbox {
     root: PathBuf,
@@ -328,7 +382,7 @@ mod tests {
     s.write_live("linked_copies/r1.psd", b"secured copy");
     let staging = s.snapshot("staging.db", b"backed up");
     let zip = s.root.join("backup.zip");
-    export_to(&s.local, &staging, &zip).unwrap();
+    export_to(&s.local, &staging, ACCOUNTS, &zip).unwrap();
     assert!(!staging.exists(), "staging snapshot is cleaned up");
 
     // Everything changes after the backup was taken.
@@ -339,8 +393,11 @@ mod tests {
 
     prepare_restore(&zip, &s.config, &s.local).unwrap();
     assert_eq!(s.live_db(), db_bytes(b"newer"), "nothing live changes until the restart");
+    assert_eq!(read_result(&s.config), None);
 
     apply_restore(&s.config, &s.local);
+    assert_eq!(read_result(&s.config).as_deref(), Some(ACCOUNTS));
+    assert!(!s.config.join(pending_name(ACCOUNTS_FILENAME)).exists());
     assert_eq!(s.live_db(), db_bytes(b"backed up"));
     assert!(!s.config.join(format!("{DB_FILENAME}-journal")).exists());
     assert_eq!(fs::read(s.local.join("attachments/r1/a.pdf")).unwrap(), b"attachment");
@@ -354,7 +411,7 @@ mod tests {
     let s = Sandbox::new();
     let staging = s.snapshot("staging.db", b"x");
     let zip = s.root.join("backup.zip");
-    export_to(&s.local, &staging, &zip).unwrap();
+    export_to(&s.local, &staging, ACCOUNTS, &zip).unwrap();
     s.write_live("covers/added_later.jpg", b"x");
 
     prepare_restore(&zip, &s.config, &s.local).unwrap();
@@ -381,6 +438,7 @@ mod tests {
     apply_restore(&s.config, &s.local);
 
     assert_eq!(s.live_db(), db_bytes(b"old"));
+    assert_eq!(read_result(&s.config).as_deref(), Some(""), "still signals a restore, with no accounts");
     assert_eq!(fs::read(s.local.join("linked_copies/r1.psd")).unwrap(), b"keep me");
   }
 
@@ -415,6 +473,7 @@ mod tests {
     assert_eq!(fs::read(s.local.join("attachments/r1/a.pdf")).unwrap(), b"live attachment");
     assert!(!s.config.join(pending_name(DB_FILENAME)).exists());
     assert!(!s.local.join(pending_name("attachments")).exists());
+    assert_eq!(read_result(&s.config), None);
   }
 
   #[test]
@@ -424,7 +483,7 @@ mod tests {
     fs::write(&zip, b"previous backup").unwrap();
 
     let missing_snapshot = s.root.join("does_not_exist.db");
-    assert!(export_to(&s.local, &missing_snapshot, &zip).is_err());
+    assert!(export_to(&s.local, &missing_snapshot, ACCOUNTS, &zip).is_err());
 
     assert_eq!(fs::read(&zip).unwrap(), b"previous backup");
     assert!(!s.root.join("backup.zip.partial").exists());

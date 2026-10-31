@@ -6,13 +6,17 @@
 //
 // Restore writes `*.pending` siblings and relaunches the app — the
 // swap into the live files happens in Rust's .setup(), before this
-// module (or the sql plugin's connection) ever runs again.
+// module (or the sql plugin's connection) ever runs again. The app then
+// finishes up with finishPendingRestore(), so that a backup also works on
+// another machine: accounts come back and file paths follow the new folder.
 
 import { save, open } from '@tauri-apps/plugin-dialog'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { invoke } from '@tauri-apps/api/core'
-import { appLocalDataDir, join } from '@tauri-apps/api/path'
+import { appLocalDataDir, join, sep } from '@tauri-apps/api/path'
 import { getDb } from './db.js'
+import { rebaseStoredPaths } from './restorePaths.js'
+import MockAuthService from '../auth/MockAuthService.js'
 
 const BACKUP_FILTERS = [{ name: 'Vestigio Backup', extensions: ['zip'] }]
 
@@ -34,7 +38,8 @@ export async function exportBackup() {
   // across SQLite versions for bound params. Safe here regardless —
   // stagingPath is built from a fixed app-dir path, never user input.
   await db.execute(`VACUUM INTO '${stagingPath.replace(/'/g, "''")}'`)
-  await invoke('export_backup', { stagingDbPath: stagingPath, destZipPath: destPath })
+  const accountsJson = JSON.stringify(await MockAuthService.exportUsers())
+  await invoke('export_backup', { stagingDbPath: stagingPath, accountsJson, destZipPath: destPath })
   return destPath
 }
 
@@ -49,4 +54,17 @@ export async function importBackup() {
   await invoke('import_backup', { srcZipPath: srcPath })
   await relaunch()
   return true
+}
+
+/**
+ * Runs before the first render on every start; a no-op unless a restore was
+ * just applied. Safe to repeat if interrupted — it only clears the pending
+ * state after everything has succeeded.
+ */
+export async function finishPendingRestore() {
+  const accountsJson = await invoke('read_restore_result')
+  if (accountsJson === null) return
+  if (accountsJson) await MockAuthService.importUsers(JSON.parse(accountsJson))
+  await rebaseStoredPaths(await getDb(), await appLocalDataDir(), sep())
+  await invoke('clear_restore_result')
 }

@@ -131,6 +131,54 @@ describe('resetPassword', () => {
   })
 })
 
+describe('exportUsers / importUsers', () => {
+  it('restores accounts on a machine that has never seen them', async () => {
+    const source = await freshService()
+    await source.signUp('moved@example.com', 'Password1!', 'Moved User')
+    const exported = JSON.parse(JSON.stringify(await source.exportUsers()))
+
+    localStorage.clear()
+    const target = await freshService()
+    await target.importUsers(exported)
+
+    const session = await target.signIn('moved@example.com', 'Password1!')
+    expect(session.user.id).toBe(exported['moved@example.com'].id)
+  })
+
+  it('keeps accounts the backup does not mention, and lets the backup win on a clash', async () => {
+    const svc = await freshService()
+    await svc.signUp('kept@example.com', 'Password1!', 'Kept')
+    await svc.signUp('clash@example.com', 'Password1!', 'Clash')
+
+    await svc.importUsers({ 'clash@example.com': { id: 'user_from_backup', email: 'clash@example.com' } })
+
+    const users = JSON.parse(localStorage.getItem(USERS_KEY))
+    expect(users['kept@example.com']).toBeDefined()
+    expect(users['clash@example.com'].id).toBe('user_from_backup')
+  })
+
+  it('ends a session whose account id just changed, and only that', async () => {
+    const svc = await freshService()
+    await svc.signUp('me@example.com', 'Password1!', 'Me')
+    await svc.signIn('me@example.com', 'Password1!')
+
+    await svc.importUsers({ 'other@example.com': { id: 'x', email: 'other@example.com' } })
+    expect(await svc.getSession()).not.toBeNull()
+
+    await svc.importUsers({ 'me@example.com': { id: 'user_from_backup', email: 'me@example.com' } })
+    expect(await svc.getSession()).toBeNull()
+  })
+
+  it('ignores malformed records', async () => {
+    const svc = await freshService()
+    await svc.importUsers({ 'bad@example.com': { email: 'bad@example.com' }, 'x@example.com': null })
+
+    const users = JSON.parse(localStorage.getItem(USERS_KEY))
+    expect(users['bad@example.com']).toBeUndefined()
+    expect(users['x@example.com']).toBeUndefined()
+  })
+})
+
 describe('signInWithGoogle', () => {
   it('flags only the first sign-in as new, so only that one goes to onboarding', async () => {
     const svc = await freshService()

@@ -342,7 +342,7 @@
       "language": "Idioma",
       "theme": "Tema",
       "backupTitle": "Copia de seguridad",
-      "backupDescription": "Incluye todas las ideas, su historial y los archivos adjuntos — un solo .zip que podés guardar donde quieras.",
+      "backupDescription": "Incluye todas las ideas, su historial, los archivos adjuntos y las cuentas de este equipo — un solo .zip que puedes restaurar aquí o en otro equipo. Guárdalo en un lugar seguro.",
       "backupExport": "Exportar copia completa",
       "backupExporting": "Exportando…",
       "backupExported": "Copia de seguridad guardada.",

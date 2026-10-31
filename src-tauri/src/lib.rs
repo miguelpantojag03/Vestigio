@@ -98,7 +98,9 @@ pub fn run() {
     .plugin(tauri_plugin_process::init())
     .invoke_handler(tauri::generate_handler![
       backup::export_backup,
-      backup::import_backup
+      backup::import_backup,
+      backup::read_restore_result,
+      backup::clear_restore_result
     ])
     .setup(|app| {
       // Must run before the frontend's first Database.load() call.

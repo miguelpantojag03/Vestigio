@@ -11,6 +11,7 @@ import { ToastProvider } from './components/Toast.jsx'
 import AppRouter from './AppRouter.jsx'
 import { hasUnsavedChanges } from './lib/windowCloseGuard.js'
 import { migrateLegacyData } from './lib/legacyMigration.js'
+import { finishPendingRestore } from './lib/backup.js'
 
 // ── Close guard ─────────────────────────────────────────────────────
 // Blocks a native window close while a modal has unsaved form data, so
@@ -72,8 +73,13 @@ class ErrorBoundary extends Component {
 // so this would otherwise hard-crash the app on startup with a cryptic
 // IPC error. Skip it there; the real dev loop is `npm run tauri dev`.
 if (window.__TAURI_INTERNALS__) {
-  // Runs before the first render: a failure here must not leave the window
+  // Run before the first render: a failure here must not leave the window
   // blank forever, with no ErrorBoundary mounted yet to report it.
+  try {
+    await finishPendingRestore()
+  } catch (err) {
+    console.error('[main] Could not finish restoring a backup:', err)
+  }
   try {
     await migrateLegacyData()
   } catch (err) {

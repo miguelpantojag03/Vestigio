@@ -206,6 +206,35 @@ const MockAuthService = {
     }
   },
 
+  // Backups carry the accounts: the relics in a restored database belong to
+  // these user ids, and a fresh machine wouldn't know them otherwise.
+  async exportUsers() {
+    await _demoInit
+    return storageGetLocal(USERS_KEY) || {}
+  },
+
+  // The backup's record wins over a same-email account here, since that's the
+  // id its relics are stored under. Accounts it doesn't mention are kept.
+  async importUsers(restored) {
+    await _demoInit
+    const users = storageGetLocal(USERS_KEY) || {}
+    for (const [key, record] of Object.entries(restored ?? {})) {
+      if (record?.id && record.email === key) users[key] = record
+    }
+    storageSetLocal(USERS_KEY, users)
+    // A session under an id that just stopped being that account's would log
+    // into an empty archive; better to ask for a sign-in.
+    const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY)
+    if (raw) {
+      let session = null
+      try { session = JSON.parse(raw) } catch { /* treated as stale below */ }
+      if (users[session?.user?.email]?.id !== session?.user?.id || !session) {
+        localStorage.removeItem(SESSION_KEY)
+        sessionStorage.removeItem(SESSION_KEY)
+      }
+    }
+  },
+
   onAuthStateChange(callback) {
     listeners.add(callback)
     return () => listeners.delete(callback)

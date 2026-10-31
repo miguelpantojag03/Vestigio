@@ -342,7 +342,7 @@
       "language": "Language",
       "theme": "Theme",
       "backupTitle": "Backup",
-      "backupDescription": "Includes every idea, its history, and all attachments — a single .zip you can save anywhere.",
+      "backupDescription": "Includes every idea, its history, all attachments and this computer's accounts — a single .zip you can restore here or on another computer. Keep it somewhere safe.",
       "backupExport": "Export full backup",
       "backupExporting": "Exporting…",
       "backupExported": "Backup saved.",
