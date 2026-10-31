@@ -22,7 +22,7 @@ function CategoryIcon({ cat }) {
   }
 }
 
-export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onCardDragEnd, animIndex = 0, selectionMode = false }) {
+export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onCardDragEnd, animIndex = 0, selectionMode = false, projectLabel }) {
   const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
   const [attCount, setAttCount] = useState(0)
@@ -156,6 +156,13 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
       <div style={{fontSize:13,fontStyle:'italic',fontWeight:500,fontFamily:font.display,color:color.textPrimary,marginBottom:4,lineHeight:1.4}}>
         "{relic.title}"
       </div>
+
+      {/* Which project, in the views that mix them */}
+      {projectLabel && (
+        <div style={{fontSize:10,color:color.textSecondary,fontFamily:font.ui,marginBottom:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+          {projectLabel}
+        </div>
+      )}
 
       {/* Description */}
       <p style={{fontSize:11,color:color.textSecondary,fontFamily:font.ui,lineHeight:1.55,margin:0,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>

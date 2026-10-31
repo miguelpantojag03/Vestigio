@@ -267,7 +267,7 @@ export async function moveRelicsToProject(userId, ids, project) {
   return getRelics(userId)
 }
 
-const MAX_TAGS = 10 // same limit as TagsInput
+export const MAX_TAGS = 10 // same limit as TagsInput
 
 export async function addTagToRelics(userId, ids, rawTag) {
   const tag = rawTag.trim().toLowerCase()

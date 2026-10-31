@@ -36,26 +36,35 @@ export function useRelics(userId, currentProjectId) {
   const [sortField,  setSortField]  = useState('date')     // 'date'|'title'|'category'|'status'
   const [sortDir,    setSortDir]    = useState('desc')     // 'asc'|'desc'
   const [loadedUserId, setLoadedUserId] = useState(null)
+  const [loadFailed,   setLoadFailed]   = useState(false)
+  const [reloadKey,    setReloadKey]    = useState(0)
   const loading = Boolean(userId) && userId !== loadedUserId
 
   useEffect(() => {
     if (!userId) return
     let cancelled = false
     getRelics(userId)
-      .catch(err => {
-        console.error('[useRelics] Failed to load relics:', err)
-        return []
-      })
       .then(data => {
         if (cancelled) return
+        setLoadFailed(false)
         setRelics(data)
         const active = data.filter(r => !r.deletedAt)
         const revived = active.find(r => r.revived)
         setSelectedId(revived?.id ?? active[0]?.id ?? null)
         setLoadedUserId(userId)
       })
+      .catch(err => {
+        console.error('[useRelics] Failed to load relics:', err)
+        if (cancelled) return
+        // Not an empty list: telling someone their archive is empty when it
+        // just couldn't be read would be the worst possible message here.
+        setLoadFailed(true)
+        setLoadedUserId(userId)
+      })
     return () => { cancelled = true }
-  }, [userId])
+  }, [userId, reloadKey])
+
+  const reload = useCallback(() => setReloadKey(key => key + 1), [])
 
   // Trashed relics are out of everything except the trash section itself.
   const relics  = useMemo(() => allRelics.filter(r => !r.deletedAt), [allRelics])
@@ -205,7 +214,7 @@ export function useRelics(userId, currentProjectId) {
     searchDateFrom, setSearchDateFrom,
     searchDateTo,   setSearchDateTo,
     sortField, sortDir, cycleSort,
-    loading, stats,
+    loading, loadFailed, reload, stats,
     add, update, revive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
   }
 }

@@ -177,9 +177,18 @@
       "recent": "No relics added yet.",
       "archiveDark": "Your archive is empty. No ideas have died here yet.",
       "addFirst": "+ Add your first relic",
-      "deleted": "The trash is empty."
+      "deleted": "The trash is empty.",
+      "filter": "No relics match this filter.",
+      "showAll": "Show all",
+      "clearSearch": "Clear search"
     },
     "emptyTrash": "Empty trash",
+    "noProject": "No project",
+    "loadError": {
+      "title": "Your archive could not be opened",
+      "message": "Your relics have not been deleted: the app just couldn't read them. Try again and, if it keeps happening, close and reopen Vestigio.",
+      "retry": "Try again"
+    },
     "bulk": {
       "select": "Select",
       "selectAll": "Select all",
@@ -203,6 +212,8 @@
       "emptyTrashTitle": "Empty the trash?",
       "emptyTrashConfirm": "Empty trash",
       "trashEmptied": "Trash emptied.",
+      "tagLimit_one": "{{count}} relic didn't get the tag: it already has the maximum of {{max}}.",
+      "tagLimit_other": "{{count}} relics didn't get the tag: they already have the maximum of {{max}}.",
       "moved_one": "Relic moved to \"{{project}}\".",
       "moved_other": "{{count}} relics moved to \"{{project}}\".",
       "tagged_one": "Tag added to the relic.",

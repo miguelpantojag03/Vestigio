@@ -177,9 +177,18 @@
       "recent": "Aún no se ha archivado ninguna reliquia.",
       "archiveDark": "Tu archivo está vacío. Todavía no ha muerto ninguna idea aquí.",
       "addFirst": "+ Agrega tu primera reliquia",
-      "deleted": "La papelera está vacía."
+      "deleted": "La papelera está vacía.",
+      "filter": "No hay reliquias con este filtro.",
+      "showAll": "Ver todas",
+      "clearSearch": "Limpiar búsqueda"
     },
     "emptyTrash": "Vaciar papelera",
+    "noProject": "Sin proyecto",
+    "loadError": {
+      "title": "No se pudo abrir tu archivo",
+      "message": "Tus reliquias no se han borrado: la app no pudo leerlas ahora. Inténtalo de nuevo y, si sigue igual, cierra y vuelve a abrir Vestigio.",
+      "retry": "Reintentar"
+    },
     "bulk": {
       "select": "Seleccionar",
       "selectAll": "Seleccionar todas",
@@ -203,6 +212,8 @@
       "emptyTrashTitle": "¿Vaciar la papelera?",
       "emptyTrashConfirm": "Vaciar papelera",
       "trashEmptied": "Papelera vaciada.",
+      "tagLimit_one": "{{count}} reliquia no recibió la etiqueta: ya tiene el máximo de {{max}}.",
+      "tagLimit_other": "{{count}} reliquias no recibieron la etiqueta: ya tienen el máximo de {{max}}.",
       "moved_one": "Reliquia movida a «{{project}}».",
       "moved_other": "{{count}} reliquias movidas a «{{project}}».",
       "tagged_one": "Etiqueta añadida a la reliquia.",

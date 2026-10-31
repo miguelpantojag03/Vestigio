@@ -25,10 +25,10 @@ function SelectControl({ value, onChange, children }) {
   )
 }
 
-function DateInput({ value, onChange, title }) {
+function DateInput({ value, onChange, title, min, max }) {
   const { color, radius, font } = useTheme()
   return (
-    <input type="date" value={value} title={title} onChange={e => onChange(e.target.value)}
+    <input type="date" value={value} title={title} aria-label={title} min={min} max={max} onChange={e => onChange(e.target.value)}
       style={{
         padding:'6px 8px',borderRadius:radius.control,border:`1px solid ${color.bgBorder}`,
         background:alpha(color.bgBase, 0.35),color:color.textPrimary,
@@ -67,9 +67,9 @@ function SearchFilters({
         <option value="all">{t('topbar.searchFilters.allCauses')}</option>
         {DEATH_CAUSES.map(c => <option key={c} value={c}>{t(`deathCause.${c}`)}</option>)}
       </SelectControl>
-      <DateInput value={searchDateFrom} onChange={setSearchDateFrom} title={t('topbar.searchFilters.dateFrom')}/>
+      <DateInput value={searchDateFrom} onChange={setSearchDateFrom} title={t('topbar.searchFilters.dateFrom')} max={searchDateTo || undefined}/>
       <span style={{color:color.textTertiary,fontSize:12,fontFamily:font.ui}}>–</span>
-      <DateInput value={searchDateTo} onChange={setSearchDateTo} title={t('topbar.searchFilters.dateTo')}/>
+      <DateInput value={searchDateTo} onChange={setSearchDateTo} title={t('topbar.searchFilters.dateTo')} min={searchDateFrom || undefined}/>
       {active && (
         <button onClick={clear} title={t('topbar.searchFilters.clear')}
           style={{display:'flex',alignItems:'center',gap:4,padding:'6px 10px',borderRadius:8,border:'none',background:'none',cursor:'pointer',color:color.textSecondary,fontSize:12,fontFamily:font.ui}}>
@@ -134,7 +134,7 @@ export default function TopBar({
           searchDateFrom={searchDateFrom} setSearchDateFrom={setSearchDateFrom}
           searchDateTo={searchDateTo} setSearchDateTo={setSearchDateTo}
         />
-      ) : (
+      ) : section === 'gallery' && (
         <div style={{display:'flex',borderRadius:radius.control,padding:3,background:alpha(color.bgBase, 0.35),flexShrink:0}}>
           {FILTERS.map(f=>{
             const active = filter===f
@@ -153,8 +153,8 @@ export default function TopBar({
         </div>
       )}
 
-      {/* Sort dropdown */}
-      <div ref={sortRef} style={{position:'relative',flexShrink:0}}>
+      {/* Sort dropdown — "recent" has one fixed order, so it would do nothing there */}
+      {section !== 'recent' && <div ref={sortRef} style={{position:'relative',flexShrink:0}}>
         <motion.button whileTap={{scale:0.97}} onClick={()=>setSortOpen(o=>!o)}
           style={{
             display:'flex',alignItems:'center',gap:6,padding:'7px 12px',borderRadius:radius.control,
@@ -197,7 +197,7 @@ export default function TopBar({
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </div>}
 
       {/* Theme + language quick access */}
       <ThemeControl/>

@@ -21,6 +21,7 @@ import BulkActionBar       from '../components/BulkActionBar.jsx'
 import SettingsModal       from '../components/SettingsModal.jsx'
 import { useTheme }        from '../context/ThemeContext.jsx'
 import { isInsideRect, releaseHitsRect } from '../lib/momentum.js'
+import { MAX_TAGS } from '../lib/relicStorage.js'
 
 // ── Stats bar ─────────────────────────────────────────────────────
 function StatsBar({ stats }) {
@@ -45,11 +46,13 @@ function StatsBar({ stats }) {
 }
 
 // ── Empty state ────────────────────────────────────────────────────
-function EmptyState({ onNew, hasSearch, section }) {
+function EmptyState({ onNew, hasSearch, section, filter, onShowAll, search, onClearSearch }) {
   const { t } = useTranslation()
   const { color, font } = useTheme()
+  const filtered = section === 'gallery' && filter !== 'all' && !hasSearch
   const msg = hasSearch
     ? t('dashboard.empty.search')
+    : filtered ? t('dashboard.empty.filter')
     : section === 'revived' ? t('dashboard.empty.revived')
     : section === 'recent'  ? t('dashboard.empty.recent')
     : section === 'search'  ? t('dashboard.empty.searchPrompt')
@@ -58,11 +61,31 @@ function EmptyState({ onNew, hasSearch, section }) {
   return (
     <div style={{marginTop:32,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,minHeight:200,borderRadius:16,border:`1px dashed ${color.bgBorder}`,color:color.textTertiary,padding:32}}>
       <span style={{fontSize:13,fontFamily:font.display,fontStyle:'italic'}}>{msg}</span>
-      {!hasSearch && section==='gallery' && (
+      {!hasSearch && !filtered && section==='gallery' && (
         <button onClick={onNew} style={{padding:'8px 20px',borderRadius:10,border:'none',background:color.blue500,color:color.onPrimary,fontSize:13,fontWeight:700,fontFamily:font.ui,cursor:'pointer'}}>
           {t('dashboard.empty.addFirst')}
         </button>
       )}
+      {(filtered || search) && (
+        <button onClick={filtered ? onShowAll : onClearSearch} style={{padding:'7px 16px',borderRadius:10,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.textPrimary,fontSize:12,fontWeight:600,fontFamily:font.ui,cursor:'pointer'}}>
+          {filtered ? t('dashboard.empty.showAll') : t('dashboard.empty.clearSearch')}
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ── Couldn't read the archive ─────────────────────────────────────
+function LoadFailed({ onRetry }) {
+  const { t } = useTranslation()
+  const { color, font } = useTheme()
+  return (
+    <div role="alert" style={{marginTop:32,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:10,minHeight:200,borderRadius:16,border:`1px dashed ${color.terracotta500}`,padding:32,textAlign:'center'}}>
+      <span style={{fontSize:15,fontWeight:600,fontFamily:font.display,color:color.textPrimary}}>{t('dashboard.loadError.title')}</span>
+      <span style={{fontSize:12,fontFamily:font.ui,color:color.textSecondary,maxWidth:420,lineHeight:1.6}}>{t('dashboard.loadError.message')}</span>
+      <button onClick={onRetry} style={{marginTop:4,padding:'8px 20px',borderRadius:10,border:'none',background:color.blue500,color:color.onPrimary,fontSize:13,fontWeight:700,fontFamily:font.ui,cursor:'pointer'}}>
+        {t('dashboard.loadError.retry')}
+      </button>
     </div>
   )
 }
@@ -89,6 +112,7 @@ export default function Dashboard() {
     searchCategory, setSearchCategory, searchStatus, setSearchStatus,
     searchCause, setSearchCause,
     searchDateFrom, setSearchDateFrom, searchDateTo, setSearchDateTo,
+    loading, loadFailed, reload,
     stats, add, update, revive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
   } = useRelics(user?.id, currentProjectId)
 
@@ -230,10 +254,17 @@ export default function Dashboard() {
     }
   }
 
-  async function handleBulkTag(tag) {
+  async function handleBulkTag(rawTag) {
+    const tag = rawTag.trim().toLowerCase()
+    // A relic at the limit is skipped: the toast should only claim what happened
+    const full = bulkIds.filter(id => {
+      const tags = relics.find(r => r.id === id)?.tags ?? []
+      return tags.length >= MAX_TAGS && !tags.includes(tag)
+    }).length
     try {
       await addTag(bulkIds, tag)
-      push(t('dashboard.toast.tagged', { count: bulkIds.length }), 'success')
+      if (bulkIds.length > full) push(t('dashboard.toast.tagged', { count: bulkIds.length - full }), 'success')
+      if (full > 0) push(t('dashboard.toast.tagLimit', { count: full, max: MAX_TAGS }), 'info')
     } catch (err) {
       push(err.message, 'error')
     }
@@ -257,6 +288,9 @@ export default function Dashboard() {
   async function handleAddRelic(relic) {
     await add(relic)
     push(t('dashboard.toast.relicAdded'), 'success')
+    // Show what was just created: it can't appear in these views as they stand.
+    if (section === 'revived' || section === 'deleted') setSection('gallery')
+    else if (section === 'gallery' && filter !== 'all') setFilter('all')
   }
 
   async function handleSaveEdit(id, patch) {
@@ -315,7 +349,7 @@ export default function Dashboard() {
         />
 
         {/* Center */}
-        <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',background:color.bgSurface}}>
+        <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',background:color.bgSurface,position:'relative'}}>
           <div style={{flex:1,overflowY:'auto',position:'relative'}}>
             <TopBar
               search={search} setSearch={setSearch}
@@ -361,7 +395,7 @@ export default function Dashboard() {
                 <>
                   {/* Stats */}
                   <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
-                    <StatsBar stats={stats}/>
+                    {!loading && !loadFailed ? <StatsBar stats={stats}/> : <div/>}
                     {!selectionMode && visible.length > 0 && (
                       <button onClick={() => setSelectionMode(true)} style={{...headerButton,marginTop:4}}>
                         <CheckSquare size={13}/> {t('dashboard.bulk.select')}
@@ -378,8 +412,16 @@ export default function Dashboard() {
               )}
 
               {/* Grid — responsive */}
-              {visible.length === 0 ? (
-                <EmptyState onNew={()=>setShowNew(true)} hasSearch={hasSearchActivity} section={section}/>
+              {loadFailed ? (
+                <LoadFailed onRetry={reload}/>
+              ) : loading ? (
+                <div role="status" style={{marginTop:32,fontSize:13,fontFamily:font.ui,color:color.textSecondary,textAlign:'center'}}>{t('common.loading')}</div>
+              ) : visible.length === 0 ? (
+                <EmptyState
+                  onNew={()=>setShowNew(true)} hasSearch={hasSearchActivity} section={section}
+                  filter={filter} onShowAll={()=>setFilter('all')}
+                  search={search} onClearSearch={()=>setSearch('')}
+                />
               ) : (
                 <div style={{
                   display:'grid',
@@ -391,6 +433,9 @@ export default function Dashboard() {
                       <RelicCard
                         key={r.id} relic={r} animIndex={i}
                         selectionMode={selectionMode}
+                        projectLabel={section === 'search' || section === 'deleted'
+                          ? (projects.find(p => p.id === r.projectId)?.name ?? t('dashboard.noProject'))
+                          : undefined}
                         isSelected={selectionMode ? checkedIds.has(r.id) : r.id===selected?.id}
                         onSelect={selectionMode ? toggleChecked : setSelectedId}
                         onCardDrag={handleCardDrag}
@@ -406,7 +451,7 @@ export default function Dashboard() {
                 <BulkActionBar
                   count={bulkIds.length}
                   inTrash={section === 'deleted'}
-                  projects={projects}
+                  projects={section === 'search' ? projects : projects.filter(p => p.id !== currentProjectId)}
                   onSelectAll={() => setCheckedIds(new Set(visible.map(r => r.id)))}
                   onCancel={exitSelection}
                   onMove={handleBulkMove}
@@ -418,16 +463,18 @@ export default function Dashboard() {
               )}
               </AnimatePresence>
             </div>
-
-            {section !== 'deleted' && !selectionMode && (
-              <RevivalZone
-                ref={revivalZoneRef}
-                isDragging={dragging}
-                isDragOver={dragOver}
-                justRevived={justRevived}
-              />
-            )}
           </div>
+
+          {/* Outside the scroller: it has to stay put to be a drop target for
+              a card from anywhere in a long list. */}
+          {section !== 'deleted' && !selectionMode && (
+            <RevivalZone
+              ref={revivalZoneRef}
+              isDragging={dragging}
+              isDragOver={dragOver}
+              justRevived={justRevived}
+            />
+          )}
         </main>
 
         {/* Right panel */}
