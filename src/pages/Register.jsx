@@ -78,7 +78,7 @@ export default function Register() {
   return (
     <AuthLayout>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 500, fontFamily: font.display, color: color.textPrimary, marginBottom: 6, letterSpacing: '-0.01em' }}>
+        <h1 style={{ fontSize: 24, fontWeight: 500, fontFamily: font.display, color: color.textPrimary, marginBottom: 6, letterSpacing: '-0.02em' }}>
           {t('auth.register.title')}
         </h1>
         <p style={{ fontSize: 13, color: color.textSecondary }}>

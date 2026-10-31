@@ -61,16 +61,6 @@ export default function AuthLayout({ children }) {
       height: '100vh', overflow: 'hidden', position: 'relative',
       background: color.bgBase, display: 'flex', flexDirection: 'column',
     }}>
-      {/* macOS chrome */}
-      <div style={{
-        height: 36, background: color.bgBase, borderBottom: `1px solid ${color.bgBorder}`,
-        display: 'flex', alignItems: 'center', gap: 6, padding: '0 16px', flexShrink: 0, zIndex: 2,
-      }}>
-        <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FF5F57' }} />
-        <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FEBC2E' }} />
-        <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28C840' }} />
-      </div>
-
       <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
         <Atmosphere />
 

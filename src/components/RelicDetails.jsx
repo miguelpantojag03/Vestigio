@@ -283,7 +283,7 @@ function DraftEditor({ draft, onChange, color, font, t }) {
       <input value={title} onChange={e=>setTitle(e.target.value)} placeholder={t('relicDetails.drafts.titlePlaceholder')} style={inputStyle}/>
       <textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder={t('relicDetails.drafts.descriptionPlaceholder')} rows={2} style={{...inputStyle, resize:'vertical'}}/>
       <textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder={t('relicDetails.drafts.notesPlaceholder')} rows={2} style={{...inputStyle, resize:'vertical'}}/>
-      <span style={{ fontSize:9, color:color.textTertiary }}>{t('relicDetails.drafts.autosaveHint')}</span>
+      <span style={{ fontSize:10, color:color.textTertiary }}>{t('relicDetails.drafts.autosaveHint')}</span>
     </div>
   )
 }
@@ -372,7 +372,7 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
             <span style={{flex:1,fontSize:11,color:color.textSecondary,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
               {d.label || d.title || t('relicDetails.drafts.untitled')}
             </span>
-            <span style={{fontSize:9,color:color.textTertiary}}>{d.archivedReason}</span>
+            <span style={{fontSize:10,color:color.textTertiary}}>{d.archivedReason}</span>
           </div>
         ))}
       </div>
@@ -488,7 +488,7 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
           {relic.tags?.length > 0 && (
             <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
               {relic.tags.map(tag=>(
-                <span key={tag} style={{fontSize:9,fontWeight:700,letterSpacing:'0.08em',color:color.blue300,background:alpha(color.blue500, 0.15),borderRadius:99,padding:'2px 8px'}}>
+                <span key={tag} style={{fontSize:10,fontWeight:700,letterSpacing:'0.08em',color:color.blue300,background:alpha(color.blue500, 0.15),borderRadius:99,padding:'2px 8px'}}>
                   {tag}
                 </span>
               ))}

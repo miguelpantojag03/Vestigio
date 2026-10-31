@@ -58,7 +58,7 @@ export default function Onboarding() {
         </div>
 
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: 24, fontWeight: 500, fontFamily: font.display, color: color.textPrimary, marginBottom: 6, letterSpacing: '-0.01em' }}>
+          <h1 style={{ fontSize: 24, fontWeight: 500, fontFamily: font.display, color: color.textPrimary, marginBottom: 6, letterSpacing: '-0.02em' }}>
             {t('auth.onboarding.title')}
           </h1>
           <p style={{ fontSize: 13, color: color.textSecondary, lineHeight: 1.6 }}>

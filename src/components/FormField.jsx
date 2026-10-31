@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 
@@ -56,6 +57,7 @@ export function Input({ register, error, ...props }) {
 }
 
 export function PasswordInput({ register, error, ...props }) {
+  const { t } = useTranslation()
   const { color, radius, font } = useTheme()
   const [show, setShow] = useState(false)
   const inputBase = {
@@ -90,7 +92,7 @@ export function PasswordInput({ register, error, ...props }) {
           position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
           background: 'none', border: 'none', cursor: 'pointer', color: color.textSecondary, padding: 2,
         }}
-        aria-label={show ? 'Hide password' : 'Show password'}
+        aria-label={show ? t('common.hidePassword') : t('common.showPassword')}
       >
         {show ? <EyeOff size={15} /> : <Eye size={15} />}
       </button>

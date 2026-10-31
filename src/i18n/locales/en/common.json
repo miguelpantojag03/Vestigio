@@ -1,5 +1,7 @@
 {
   "common": {
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "undo": "Undo",
     "cancel": "Cancel",
     "save": "Save",

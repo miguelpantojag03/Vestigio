@@ -334,7 +334,7 @@ export default function Dashboard() {
 
               {/* Header */}
               <div style={{marginBottom:2}}>
-                <h1 style={{fontSize:28,fontWeight:600,fontFamily:font.display,color:color.textPrimary,letterSpacing:'-0.01em',lineHeight:1.1,margin:0}}>
+                <h1 style={{fontSize:28,fontWeight:600,fontFamily:font.display,color:color.textPrimary,letterSpacing:'-0.02em',lineHeight:1.1,margin:0}}>
                   {t(`dashboard.sectionTitle.${section}`)}
                 </h1>
                 <p style={{fontSize:12,color:color.textSecondary,marginTop:4,marginBottom:0}}>

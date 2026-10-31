@@ -1,5 +1,7 @@
 {
   "common": {
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "undo": "Deshacer",
     "cancel": "Cancelar",
     "save": "Guardar",

@@ -75,7 +75,7 @@ export default function Login() {
     <AuthLayout>
       {/* Header */}
       <div style={{ marginBottom: 26 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 500, fontFamily: font.display, color: color.textPrimary, marginBottom: 8, letterSpacing: '-0.01em', lineHeight: 1.15 }}>
+        <h1 style={{ fontSize: 26, fontWeight: 500, fontFamily: font.display, color: color.textPrimary, marginBottom: 8, letterSpacing: '-0.02em', lineHeight: 1.15 }}>
           {t('auth.login.title')}
         </h1>
         <p style={{ fontSize: 13, color: color.textSecondary, fontFamily: font.ui, lineHeight: 1.5 }}>
