@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence }  from 'framer-motion'
 import { useNavigate }     from 'react-router-dom'
 import { useTranslation }  from 'react-i18next'
-import { Archive, RotateCcw, Layers } from 'lucide-react'
+import { Archive, RotateCcw, Layers, Trash2 } from 'lucide-react'
 import { useAuth }         from '../auth/AuthProvider.jsx'
 import { useToast }        from '../components/Toast.jsx'
 import { useRelics }       from '../hooks/useRelics.js'
@@ -51,6 +51,7 @@ function EmptyState({ onNew, hasSearch, section }) {
     : section === 'revived' ? t('dashboard.empty.revived')
     : section === 'recent'  ? t('dashboard.empty.recent')
     : section === 'search'  ? t('dashboard.empty.searchPrompt')
+    : section === 'deleted' ? t('dashboard.empty.deleted')
     : t('dashboard.empty.archiveDark')
   return (
     <div style={{marginTop:32,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,minHeight:200,borderRadius:16,border:`1px dashed ${color.bgBorder}`,color:color.textTertiary,padding:32}}>
@@ -67,7 +68,7 @@ function EmptyState({ onNew, hasSearch, section }) {
 // ── Main ──────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { t }              = useTranslation()
-  const { color, font }    = useTheme()
+  const { color, font, radius } = useTheme()
   const { user }           = useAuth()
   const { push }           = useToast()
   const navigate           = useNavigate()
@@ -80,12 +81,12 @@ export default function Dashboard() {
   } = useProjects(user?.id)
 
   const {
-    relics, projectRelics, visible, selected, setSelectedId,
+    relics, trashed, projectRelics, visible, selected, setSelectedId,
     filter, setFilter, section, setSection,
     search, setSearch, sortField, sortDir, cycleSort,
     searchCategory, setSearchCategory, searchStatus, setSearchStatus,
     searchDateFrom, setSearchDateFrom, searchDateTo, setSearchDateTo,
-    stats, add, update, remove, revive,
+    stats, add, update, revive, trash, restore, removeForever, emptyTrash,
   } = useRelics(user?.id, currentProjectId)
 
   const hasSearchActivity = section === 'search'
@@ -148,17 +149,57 @@ export default function Dashboard() {
     catch (err) { push(err.message, 'error') }
   }
 
-  async function handleDelete(id) {
-    const relic = relics.find(r => r.id === id)
+  // No confirmation: moving to the trash is reversible, and the toast says how.
+  async function handleTrash(ids) {
+    try {
+      await trash(ids)
+      push(t('dashboard.toast.trashed', { count: ids.length }), 'info', 8000, {
+        label: t('common.undo'),
+        onClick: () => handleRestore(ids),
+      })
+    } catch (err) {
+      push(err.message, 'error')
+    }
+  }
+
+  async function handleRestore(ids) {
+    try {
+      await restore(ids)
+      setSelectedId(ids[0])
+      push(t('dashboard.toast.restored', { count: ids.length }), 'success')
+    } catch (err) {
+      push(err.message, 'error')
+    }
+  }
+
+  async function handleDeleteForever(ids) {
+    const relic = ids.length === 1 ? trashed.find(r => r.id === ids[0]) : null
     const ok = await confirm({
-      title: t('dashboard.toast.deleteTitle'),
-      message: relic ? t('dashboard.toast.deleteMessage', { title: relic.title }) : t('dashboard.toast.deleteCannotUndo'),
+      title: t('dashboard.toast.deleteTitle', { count: ids.length }),
+      message: relic
+        ? t('dashboard.toast.deleteMessage', { title: relic.title })
+        : t('dashboard.toast.deleteManyMessage', { count: ids.length }),
       danger: true, confirmLabel: t('dashboard.toast.deleteConfirmLabel'),
     })
     if (!ok) return
     try {
-      await remove(id)
-      push(t('dashboard.toast.deletedForever'), 'info')
+      await removeForever(ids)
+      push(t('dashboard.toast.deletedForever', { count: ids.length }), 'info')
+    } catch (err) {
+      push(err.message, 'error')
+    }
+  }
+
+  async function handleEmptyTrash() {
+    const ok = await confirm({
+      title: t('dashboard.toast.emptyTrashTitle'),
+      message: t('dashboard.toast.deleteManyMessage', { count: trashed.length }),
+      danger: true, confirmLabel: t('dashboard.toast.emptyTrashConfirm'),
+    })
+    if (!ok) return
+    try {
+      await emptyTrash()
+      push(t('dashboard.toast.trashEmptied'), 'info')
     } catch (err) {
       push(err.message, 'error')
     }
@@ -251,14 +292,25 @@ export default function Dashboard() {
                 </p>
               </div>
 
-              {/* Stats */}
-              <StatsBar stats={stats}/>
+              {section === 'deleted' ? (
+                trashed.length > 0 && (
+                  <button onClick={handleEmptyTrash}
+                    style={{display:'flex',alignItems:'center',gap:6,margin:'12px 0 16px',padding:'7px 12px',borderRadius:radius.control,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.terracotta500,fontSize:12,fontWeight:600,fontFamily:font.ui,cursor:'pointer'}}>
+                    <Trash2 size={13}/> {t('dashboard.emptyTrash')}
+                  </button>
+                )
+              ) : (
+                <>
+                  {/* Stats */}
+                  <StatsBar stats={stats}/>
 
-              {/* AI Insights */}
-              <div style={{marginBottom:20}}>
-                {/* Keyed by project: insights about another project's relics must not linger */}
-                <AIInsightsPanel key={currentProjectId} relics={projectRelics} onHighlight={focusRelic}/>
-              </div>
+                  {/* AI Insights */}
+                  <div style={{marginBottom:20}}>
+                    {/* Keyed by project: insights about another project's relics must not linger */}
+                    <AIInsightsPanel key={currentProjectId} relics={projectRelics} onHighlight={focusRelic}/>
+                  </div>
+                </>
+              )}
 
               {/* Grid — responsive */}
               {visible.length === 0 ? (
@@ -284,11 +336,13 @@ export default function Dashboard() {
               )}
             </div>
 
-            <RevivalZone
-              ref={revivalZoneRef}
-              isDragOver={dragOver}
-              justRevived={justRevived}
-            />
+            {section !== 'deleted' && (
+              <RevivalZone
+                ref={revivalZoneRef}
+                isDragOver={dragOver}
+                justRevived={justRevived}
+              />
+            )}
           </div>
         </main>
 
@@ -298,7 +352,9 @@ export default function Dashboard() {
           projectName={projects.find(p => p.id === selected?.projectId)?.name}
           onUpdateRelic={update}
           onRevive={handleRevive}
-          onDelete={handleDelete}
+          onTrash={id => handleTrash([id])}
+          onRestore={id => handleRestore([id])}
+          onDeleteForever={id => handleDeleteForever([id])}
           onEdit={relic=>setEditRelic(relic)}
           onAnalyze={handleAnalyze}
           aiAnalysis={selected ? aiAnalysis[selected.id] : null}

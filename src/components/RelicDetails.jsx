@@ -4,7 +4,7 @@ import {
   RotateCcw, Trash2, Pencil, Paperclip, Expand,
   Image as ImageIcon, Sparkles, X,
   Link2, ExternalLink, RefreshCw, ShieldCheck, AlertTriangle,
-  Layers, Plus, ChevronDown, ChevronUp, ArrowUpCircle, Archive,
+  Layers, Plus, ChevronDown, ChevronUp, ArrowUpCircle, Archive, Undo2,
 } from 'lucide-react'
 import { getThumbnail } from './Thumbnails.jsx'
 import { useAttachments }  from '../hooks/useAttachments.js'
@@ -381,7 +381,7 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
 }
 
 /* ─── main component ──────────────────────────────────────────────── */
-export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevive, onDelete, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
+export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevive, onTrash, onRestore, onDeleteForever, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
   const { t } = useTranslation()
   const { color, font } = useTheme()
   const { user } = useAuth()
@@ -405,6 +405,7 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
   const visibleImg = showAll ? imageAtts : imageAtts.slice(0, 6)
   const totalAtts  = attachments.length
   const hasCover   = !!relic?.coverImage
+  const inTrash    = !!relic?.deletedAt
 
   return (
     <aside style={{
@@ -419,7 +420,7 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
         borderBottom: relic ? `1px solid ${color.bgBorder}` : 'none',flexShrink:0,
       }}>
         <span style={{fontSize:14,fontWeight:600,fontFamily:font.display,color:color.textPrimary}}>{t('relicDetails.title')}</span>
-        {relic && (
+        {relic && !inTrash && (
           <button onClick={()=>onEdit(relic)}
             style={{display:'flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:6,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.textSecondary,fontSize:11,fontWeight:600,fontFamily:font.ui,cursor:'pointer',transition:'border-color 0.12s,color 0.12s'}}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=color.blue500;e.currentTarget.style.color=color.blue300}}
@@ -527,7 +528,7 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
 
           {/* drafts — in-progress variants of this idea's content, usable
               from any status (archived or revived) */}
-          <DraftsSection relic={relic} onUpdateRelic={onUpdateRelic} color={color} font={font} t={t} push={push}/>
+          {!inTrash && <DraftsSection relic={relic} onUpdateRelic={onUpdateRelic} color={color} font={font} t={t} push={push}/>}
 
           {/* linked external file */}
           <LinkedFileSection relic={relic} onUpdateRelic={onUpdateRelic} color={color} font={font} t={t} push={push}/>
@@ -557,10 +558,18 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
           )}
 
           {/* AI analysis */}
-          <AIAnalysisBlock analysis={aiAnalysis} loading={aiLoading} onRequest={()=>onAnalyze?.(relic)}/>
+          {!inTrash && <AIAnalysisBlock analysis={aiAnalysis} loading={aiLoading} onRequest={()=>onAnalyze?.(relic)}/>}
 
           {/* actions */}
-          {!relic.revived && (
+          {inTrash && (
+            <button onClick={()=>onRestore(relic.id)}
+              style={{width:'100%',padding:'10px 0',borderRadius:8,border:'none',background:color.blue500,color:color.onPrimary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'background 0.12s'}}
+              onMouseEnter={e=>e.currentTarget.style.background=color.blue600}
+              onMouseLeave={e=>e.currentTarget.style.background=color.blue500}>
+              <Undo2 size={13}/> {t('relicDetails.restore')}
+            </button>
+          )}
+          {!inTrash && !relic.revived && (
             <button onClick={()=>onRevive(relic.id)}
               style={{width:'100%',padding:'10px 0',borderRadius:8,border:'none',background:color.blue500,color:color.onPrimary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'background 0.12s'}}
               onMouseEnter={e=>e.currentTarget.style.background=color.blue600}
@@ -568,11 +577,11 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
               <RotateCcw size={13}/> {t('relicDetails.reviveNow')}
             </button>
           )}
-          <button onClick={()=>onDelete(relic.id)}
+          <button onClick={()=>inTrash ? onDeleteForever(relic.id) : onTrash(relic.id)}
             style={{width:'100%',padding:'10px 0',borderRadius:8,background:'transparent',color:color.textSecondary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer',border:`1px solid ${color.bgBorder}`,display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'border-color 0.12s,color 0.12s'}}
             onMouseEnter={e=>{e.currentTarget.style.borderColor=color.terracotta500;e.currentTarget.style.color=color.terracotta500}}
             onMouseLeave={e=>{e.currentTarget.style.borderColor=color.bgBorder;e.currentTarget.style.color=color.textSecondary}}>
-            <Trash2 size={13}/> {t('relicDetails.deleteForever')}
+            <Trash2 size={13}/> {inTrash ? t('relicDetails.deleteForever') : t('relicDetails.moveToTrash')}
           </button>
         </div>
       )}

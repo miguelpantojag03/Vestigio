@@ -13,9 +13,10 @@ export function ToastProvider({ children }) {
     setToasts(prev => prev.filter(t => t.id !== tid))
   }, [])
 
-  const push = useCallback((message, type = 'info', duration = 4000) => {
+  // action: optional { label, onClick } button, e.g. "Undo"
+  const push = useCallback((message, type = 'info', duration = 4000, action = null) => {
     const tid = ++id.current
-    setToasts(prev => [...prev, { id: tid, message, type }])
+    setToasts(prev => [...prev, { id: tid, message, type, action }])
     if (duration > 0) {
       setTimeout(() => dismiss(tid), duration)
     }
@@ -93,6 +94,14 @@ function ToastItem({ toast, onDismiss }) {
     >
       {getIcon(toast.type, color)}
       <span style={{ flex: 1 }}>{toast.message}</span>
+      {toast.action && (
+        <button
+          onClick={() => { toast.action.onClick(); onDismiss(toast.id) }}
+          style={{ color: color.blue300, background: 'none', border: 'none', cursor: 'pointer', padding: 2, fontSize: 13, fontWeight: 700, fontFamily: font.ui }}
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         onClick={() => onDismiss(toast.id)}
         style={{ color: color.textSecondary, background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}

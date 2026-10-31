@@ -1,5 +1,6 @@
 {
   "common": {
+    "undo": "Deshacer",
     "cancel": "Cancelar",
     "save": "Guardar",
     "saving": "Guardando…",
@@ -123,9 +124,8 @@
       "recentDesc": "Últimas 10 añadidas",
       "revived": "Revividas",
       "revivedDesc": "De vuelta en acción",
-      "deleted": "Eliminado Permanentemente",
-      "deletedDesc": "Próximamente",
-      "comingSoon": "Próximamente"
+      "deleted": "Papelera",
+      "deletedDesc": "Reliquias eliminadas, listas para restaurar"
     },
     "activeProject": "proyecto activo",
     "projectVersion": "v2.4 activo",
@@ -158,13 +158,13 @@
     "language": "Idioma"
   },
   "dashboard": {
-    "sectionTitle": { "gallery": "El Archivo", "search": "Buscar", "recent": "Reliquias Recientes", "revived": "Revividas", "deleted": "Eliminado Permanentemente" },
+    "sectionTitle": { "gallery": "El Archivo", "search": "Buscar", "recent": "Reliquias Recientes", "revived": "Revividas", "deleted": "Papelera" },
     "sectionDesc": {
       "gallery": "Revisa las ideas descartadas de «{{project}}».",
       "search": "Buscá por texto, categoría, estado o fecha — en todo el archivo a la vez.",
       "recent": "Tus 10 reliquias más recientes.",
       "revived": "Ideas que volvieron a la vida.",
-      "deleted": "Reliquias eliminadas para siempre."
+      "deleted": "Restaura una reliquia o elimínala para siempre, de todos tus proyectos."
     },
     "stats": { "total": "Total", "revived": "Revividas", "archived": "Archivadas" },
     "empty": {
@@ -173,17 +173,29 @@
       "revived": "Todavía no revives nada. Arrastra una reliquia a la Zona de Revival.",
       "recent": "Aún no se ha archivado ninguna reliquia.",
       "archiveDark": "Tu archivo está vacío. Todavía no ha muerto ninguna idea aquí.",
-      "addFirst": "+ Agrega tu primera reliquia"
+      "addFirst": "+ Agrega tu primera reliquia",
+      "deleted": "La papelera está vacía."
     },
+    "emptyTrash": "Vaciar papelera",
     "toast": {
       "revived": "¡Reliquia revivida! 🎉",
       "relicAdded": "Reliquia añadida al archivo.",
       "sessionExpired": "Tu sesión expiró. Vuelve a iniciar sesión.",
-      "deleteTitle": "¿Eliminar esta reliquia para siempre?",
+      "deleteTitle_one": "¿Eliminar esta reliquia para siempre?",
+      "deleteTitle_other": "¿Eliminar {{count}} reliquias para siempre?",
+      "deleteManyMessage_one": "{{count}} reliquia y sus archivos adjuntos se eliminarán para siempre. Esto no se puede deshacer.",
+      "deleteManyMessage_other": "{{count}} reliquias y sus archivos adjuntos se eliminarán para siempre. Esto no se puede deshacer.",
+      "trashed_one": "Reliquia movida a la papelera.",
+      "trashed_other": "{{count}} reliquias movidas a la papelera.",
+      "restored_one": "Reliquia restaurada.",
+      "restored_other": "{{count}} reliquias restauradas.",
+      "emptyTrashTitle": "¿Vaciar la papelera?",
+      "emptyTrashConfirm": "Vaciar papelera",
+      "trashEmptied": "Papelera vaciada.",
       "deleteMessage": "«{{title}}» y todos sus archivos adjuntos se eliminarán para siempre.",
-      "deleteCannotUndo": "Esto no se puede deshacer.",
       "deleteConfirmLabel": "Eliminar para siempre",
-      "deletedForever": "Reliquia eliminada para siempre."
+      "deletedForever_one": "Reliquia eliminada para siempre.",
+      "deletedForever_other": "{{count}} reliquias eliminadas para siempre."
     }
   },
   "relicCard": {
@@ -224,6 +236,8 @@
     "aiAnalyzeButton": "Analizar esta reliquia",
     "reviveNow": "Revivir Ahora",
     "deleteForever": "Eliminar para Siempre",
+    "moveToTrash": "Mover a la Papelera",
+    "restore": "Restaurar",
     "viewOverlay": "Ver",
     "drafts": {
       "title": "Borradores",

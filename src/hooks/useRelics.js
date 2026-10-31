@@ -2,7 +2,7 @@
 // All relic state: CRUD, filtering, searching, sorting, section nav.
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getRelics, addRelic, updateRelic, deleteRelic } from '../lib/relicStorage.js'
+import { getRelics, addRelic, updateRelic, trashRelics, restoreRelics, deleteRelics, emptyTrash as emptyTrashStorage } from '../lib/relicStorage.js'
 
 // sort helpers
 function sortFn(field, dir) {
@@ -19,7 +19,7 @@ function sortFn(field, dir) {
 }
 
 export function useRelics(userId, currentProjectId) {
-  const [relics,     setRelics]     = useState([])
+  const [allRelics,  setRelics]     = useState([])
   const [selectedId, setSelectedId] = useState(null)
   const [filter,     setFilter]     = useState('all')      // 'all'|'visuals'|'drafts'
   const [section,    setSection]    = useState('gallery')  // 'gallery'|'recent'|'revived'|'deleted'|'search'
@@ -48,12 +48,17 @@ export function useRelics(userId, currentProjectId) {
       .then(data => {
         if (cancelled) return
         setRelics(data)
-        const revived = data.find(r => r.revived)
-        setSelectedId(revived?.id ?? data[0]?.id ?? null)
+        const active = data.filter(r => !r.deletedAt)
+        const revived = active.find(r => r.revived)
+        setSelectedId(revived?.id ?? active[0]?.id ?? null)
         setLoadedUserId(userId)
       })
     return () => { cancelled = true }
   }, [userId])
+
+  // Trashed relics are out of everything except the trash section itself.
+  const relics  = useMemo(() => allRelics.filter(r => !r.deletedAt), [allRelics])
+  const trashed = useMemo(() => allRelics.filter(r => r.deletedAt), [allRelics])
 
   // toggle sort: same field → flip dir; new field → desc
   function cycleSort(field) {
@@ -63,11 +68,12 @@ export function useRelics(userId, currentProjectId) {
 
   // derived list: section → filter → search → sort
   const visible = useMemo(() => {
-    let list = relics
+    let list = section === 'deleted' ? trashed : relics
 
-    // project scope — every section except the cross-project global
-    // search stays scoped to whichever project is currently open.
-    if (section !== 'search' && currentProjectId) {
+    // project scope — every section except the cross-project global search
+    // and the trash (its relics' project may be gone) stays scoped to
+    // whichever project is currently open.
+    if (section !== 'search' && section !== 'deleted' && currentProjectId) {
       list = list.filter(r => r.projectId === currentProjectId)
     }
 
@@ -76,7 +82,6 @@ export function useRelics(userId, currentProjectId) {
     // status/project at once, not just the current section.
     if (section === 'recent')  list = [...list].sort(sortFn('date','desc')).slice(0, 10)
     else if (section === 'revived') list = list.filter(r => r.revived)
-    else if (section === 'deleted') list = [] // placeholder for soft-delete feature
 
     // category filter (only in gallery)
     if (section === 'gallery') {
@@ -106,7 +111,7 @@ export function useRelics(userId, currentProjectId) {
     if (section !== 'recent') list = [...list].sort(sortFn(sortField, sortDir))
 
     return list
-  }, [relics, section, filter, search, sortField, sortDir, searchCategory, searchStatus, searchDateFrom, searchDateTo, currentProjectId])
+  }, [relics, trashed, section, filter, search, sortField, sortDir, searchCategory, searchStatus, searchDateFrom, searchDateTo, currentProjectId])
 
   const projectRelics = useMemo(
     () => currentProjectId ? relics.filter(r => r.projectId === currentProjectId) : relics,
@@ -120,10 +125,11 @@ export function useRelics(userId, currentProjectId) {
   // falling back there would open (and let you delete) a different relic
   // from the one that was clicked.
   const selected = useMemo(() => {
+    if (section === 'deleted') return trashed.find(r => r.id === selectedId) ?? trashed[0] ?? null
     const direct = relics.find(r => r.id === selectedId)
     if (direct && (section === 'search' || !currentProjectId || direct.projectId === currentProjectId)) return direct
     return projectRelics.find(r => r.revived) ?? projectRelics[0] ?? null
-  }, [relics, selectedId, section, currentProjectId, projectRelics])
+  }, [relics, trashed, selectedId, section, currentProjectId, projectRelics])
 
   // stats — scoped to the current project, same as everything else in view
   const stats = useMemo(() => ({
@@ -149,13 +155,25 @@ export function useRelics(userId, currentProjectId) {
     return updated
   }, [userId])
 
-  const remove = useCallback(async (id) => {
+  const trash = useCallback(async (ids) => {
     if (!userId) return
-    const updated = await deleteRelic(userId, id)
-    setRelics(updated)
-    if (selectedId === id) setSelectedId(updated[0]?.id ?? null)
-    return updated
-  }, [userId, selectedId])
+    setRelics(await trashRelics(userId, ids))
+  }, [userId])
+
+  const restore = useCallback(async (ids) => {
+    if (!userId) return
+    setRelics(await restoreRelics(userId, ids))
+  }, [userId])
+
+  const removeForever = useCallback(async (ids) => {
+    if (!userId) return
+    setRelics(await deleteRelics(userId, ids))
+  }, [userId])
+
+  const emptyTrash = useCallback(async () => {
+    if (!userId) return
+    setRelics(await emptyTrashStorage(userId))
+  }, [userId])
 
   const revive = useCallback((id) => {
     const relic = relics.find(r => r.id === id)
@@ -164,7 +182,7 @@ export function useRelics(userId, currentProjectId) {
   }, [update, relics])
 
   return {
-    relics, projectRelics, visible, selected, selectedId, setSelectedId,
+    relics, trashed, projectRelics, visible, selected, selectedId, setSelectedId,
     filter, setFilter,
     section, setSection,
     search, setSearch,
@@ -174,6 +192,6 @@ export function useRelics(userId, currentProjectId) {
     searchDateTo,   setSearchDateTo,
     sortField, sortDir, cycleSort,
     loading, stats,
-    add, update, remove, revive,
+    add, update, revive, trash, restore, removeForever, emptyTrash,
   }
 }

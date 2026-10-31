@@ -32,7 +32,7 @@ vi.mock('./db.js', () => ({
   }),
 }))
 
-const { addRelic, deleteRelic, updateRelic, getRelics } = await import('./relicStorage.js')
+const { addRelic, deleteRelics, trashRelics, restoreRelics, emptyTrash, updateRelic, getRelics } = await import('./relicStorage.js')
 const { getProjects } = await import('./projectStorage.js')
 
 const USER = 'user_1'
@@ -147,7 +147,7 @@ describe('demo account seed', () => {
 
   it('does not bring the relics back once they have all been deleted', async () => {
     const { relics } = await freshModules()
-    for (const r of await relics.getRelics(DEMO)) await relics.deleteRelic(DEMO, r.id)
+    await relics.deleteRelics(DEMO, (await relics.getRelics(DEMO)).map(r => r.id))
 
     const { relics: afterRestart } = await freshModules()
     expect(await afterRestart.getRelics(DEMO)).toEqual([])
@@ -159,7 +159,46 @@ describe('demo account seed', () => {
   })
 })
 
-describe('deleteRelic', () => {
+describe('trash', () => {
+  it('keeps rows and files while in the trash, and restores intact', async () => {
+    await addRelic(USER, makeRelic('r1'))
+    addAttachmentRow('r1', '/data/attachments/r1/a.pdf')
+
+    const [trashed] = await trashRelics(USER, ['r1'])
+    expect(trashed.deletedAt).not.toBeNull()
+    expect(count('attachments')).toBe(1)
+    expect(files.size).toBe(1)
+
+    const [restored] = await restoreRelics(USER, ['r1'])
+    expect(restored.deletedAt).toBeNull()
+  })
+
+  it("can't touch another user's relic", async () => {
+    await addRelic('someone_else', makeRelic('r1'))
+
+    await trashRelics(USER, ['r1'])
+
+    expect((await getRelics('someone_else'))[0].deletedAt).toBeNull()
+  })
+
+  it('emptying it deletes only trashed relics, only for this user', async () => {
+    await addRelic(USER, makeRelic('keep'))
+    await addRelic(USER, makeRelic('gone'))
+    await addRelic('someone_else', makeRelic('theirs'))
+    await trashRelics(USER, ['gone'])
+    await trashRelics('someone_else', ['theirs'])
+    addAttachmentRow('gone', '/data/attachments/gone/a.pdf')
+    addAttachmentRow('keep', '/data/attachments/keep/a.pdf')
+
+    const remaining = await emptyTrash(USER)
+
+    expect(remaining.map(r => r.id)).toEqual(['keep'])
+    expect((await getRelics('someone_else')).map(r => r.id)).toEqual(['theirs'])
+    expect([...files.keys()]).toEqual(['/data/attachments/keep/a.pdf'])
+  })
+})
+
+describe('deleteRelics', () => {
   it('removes every row and file belonging to the relic', async () => {
     await addRelic(USER, makeRelic('r1', { linkedFileCopiedPath: '/data/linked_copies/r1.pdf' }))
     files.set('/data/linked_copies/r1.pdf', new Uint8Array([1]))
@@ -168,7 +207,7 @@ describe('deleteRelic', () => {
       `INSERT INTO drafts (id,relic_id,user_id,title,created_at,updated_at) VALUES ('d1','r1',?,'t','t','t')`
     ).run(USER)
 
-    await deleteRelic(USER, 'r1')
+    await deleteRelics(USER, ['r1'])
 
     expect(count('relics')).toBe(0)
     expect(count('attachments')).toBe(0)
@@ -183,7 +222,7 @@ describe('deleteRelic', () => {
     addAttachmentRow('r1', '/data/attachments/r1/a.pdf')
     addAttachmentRow('r2', '/data/attachments/r2/a.pdf')
 
-    const remaining = await deleteRelic(USER, 'r1')
+    const remaining = await deleteRelics(USER, ['r1'])
 
     expect(remaining.map(r => r.id)).toEqual(['r2'])
     expect([...files.keys()]).toEqual(['/data/attachments/r2/a.pdf'])
@@ -194,7 +233,7 @@ describe('deleteRelic', () => {
     await addRelic('someone_else', makeRelic('r1'))
     addAttachmentRow('r1', '/data/attachments/r1/a.pdf')
 
-    await deleteRelic(USER, 'r1')
+    await deleteRelics(USER, ['r1'])
 
     expect(count('relics')).toBe(1)
     expect(count('attachments')).toBe(1)
@@ -207,7 +246,7 @@ describe('deleteRelic', () => {
     sqlite.exec('DROP TABLE drafts')
     vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    await expect(deleteRelic(USER, 'r1')).rejects.toThrow()
+    await expect(deleteRelics(USER, ['r1'])).rejects.toThrow()
 
     expect(files.has('/data/attachments/r1/a.pdf')).toBe(true)
   })

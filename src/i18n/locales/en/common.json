@@ -1,5 +1,6 @@
 {
   "common": {
+    "undo": "Undo",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving…",
@@ -123,9 +124,8 @@
       "recentDesc": "Last 10 added",
       "revived": "Revived",
       "revivedDesc": "Back in action",
-      "deleted": "Permanently Deleted",
-      "deletedDesc": "Coming soon",
-      "comingSoon": "Coming soon"
+      "deleted": "Trash",
+      "deletedDesc": "Deleted relics, ready to restore"
     },
     "activeProject": "active project",
     "projects": {
@@ -158,13 +158,13 @@
     "language": "Language"
   },
   "dashboard": {
-    "sectionTitle": { "gallery": "The Archive", "search": "Search", "recent": "Recent Relics", "revived": "Revived", "deleted": "Permanently Deleted" },
+    "sectionTitle": { "gallery": "The Archive", "search": "Search", "recent": "Recent Relics", "revived": "Revived", "deleted": "Trash" },
     "sectionDesc": {
       "gallery": "Review discarded ideas from '{{project}}'.",
       "search": "Search by text, category, status or date — across the whole archive at once.",
       "recent": "Your 10 most recently added relics.",
       "revived": "Ideas brought back to life.",
-      "deleted": "Relics deleted forever."
+      "deleted": "Restore a relic or delete it forever, across all your projects."
     },
     "stats": { "total": "Total", "revived": "Revived", "archived": "Archived" },
     "empty": {
@@ -173,17 +173,29 @@
       "revived": "Nothing revived yet — drag a relic into the Revival Zone.",
       "recent": "No relics added yet.",
       "archiveDark": "Your archive is empty. No ideas have died here yet.",
-      "addFirst": "+ Add your first relic"
+      "addFirst": "+ Add your first relic",
+      "deleted": "The trash is empty."
     },
+    "emptyTrash": "Empty trash",
     "toast": {
       "revived": "Relic revived! 🎉",
       "relicAdded": "Relic added to the archive.",
       "sessionExpired": "Your session expired. Please sign in again.",
-      "deleteTitle": "Delete relic forever?",
+      "deleteTitle_one": "Delete this relic forever?",
+      "deleteTitle_other": "Delete {{count}} relics forever?",
+      "deleteManyMessage_one": "{{count}} relic and its attachments will be deleted forever. This can't be undone.",
+      "deleteManyMessage_other": "{{count}} relics and their attachments will be deleted forever. This can't be undone.",
+      "trashed_one": "Relic moved to the trash.",
+      "trashed_other": "{{count}} relics moved to the trash.",
+      "restored_one": "Relic restored.",
+      "restored_other": "{{count}} relics restored.",
+      "emptyTrashTitle": "Empty the trash?",
+      "emptyTrashConfirm": "Empty trash",
+      "trashEmptied": "Trash emptied.",
       "deleteMessage": "\"{{title}}\" and all its attachments will be permanently removed.",
-      "deleteCannotUndo": "This cannot be undone.",
       "deleteConfirmLabel": "Delete Forever",
-      "deletedForever": "Relic deleted forever."
+      "deletedForever_one": "Relic deleted forever.",
+      "deletedForever_other": "{{count}} relics deleted forever."
     }
   },
   "relicCard": {
@@ -224,6 +236,8 @@
     "aiAnalyzeButton": "Analyze this relic",
     "reviveNow": "Revive Now",
     "deleteForever": "Delete Forever",
+    "moveToTrash": "Move to Trash",
+    "restore": "Restore",
     "viewOverlay": "View",
     "drafts": {
       "title": "Drafts",

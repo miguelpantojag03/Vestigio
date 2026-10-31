@@ -175,7 +175,7 @@ Redirige a /app  (sin pasar por el formulario)
 
 ## Navegación interna del Dashboard
 
-El Dashboard no usa sub-rutas. La navegación del sidebar (The Gallery, Projects, Recent Relics, Permanently Deleted) es **estado local** — cambia el ítem activo visualmente pero no cambia la URL. Toda la funcionalidad principal está en `/app`.
+El Dashboard no usa sub-rutas. La navegación del sidebar (The Gallery, Search, Recent Relics, Revived, Trash) es **estado local** — cambia el ítem activo visualmente pero no cambia la URL. Toda la funcionalidad principal está en `/app`.
 
 ---
 

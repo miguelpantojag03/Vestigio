@@ -28,7 +28,7 @@ function ExportSection({ userId }) {
   const { push } = useToast()
 
   async function exportJSON() {
-    const relics = await getRelics(userId)
+    const relics = (await getRelics(userId)).filter(r => !r.deletedAt)
     const blob = new Blob([JSON.stringify(relics, null, 2)], { type: 'application/json' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
@@ -40,7 +40,7 @@ function ExportSection({ userId }) {
   }
 
   async function exportCSV() {
-    const relics  = await getRelics(userId)
+    const relics  = (await getRelics(userId)).filter(r => !r.deletedAt)
     const headers = ['id','title','category','description','project','status','createdAt','discardedAt','tags','responsible']
     const rows    = relics.map(r =>
       headers.map(h => {

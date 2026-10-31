@@ -35,22 +35,21 @@ export default function Sidebar({
       <nav style={{display:'flex',flexDirection:'column',gap:2,padding:'0 8px'}}>
         {NAV.map(({id,Icon})=>{
           const active = activeSection===id
-          const disabled = id==='deleted'
           const label = t(`sidebar.nav.${id}`)
           const desc  = t(`sidebar.nav.${id}Desc`)
           return (
-            <button key={id} onClick={()=>!disabled&&onSection(id)} disabled={disabled}
-              title={disabled?t('sidebar.nav.comingSoon'):desc}
+            <button key={id} onClick={()=>onSection(id)}
+              title={desc}
               style={{
                 display:'flex',alignItems:'center',gap:10,padding:'7px 12px',borderRadius:radius.control,border:'none',
-                cursor:disabled?'not-allowed':'pointer',
+                cursor:'pointer',
                 background:active?alpha(color.blue500, 0.18):'transparent',
-                color:active?color.blue300:disabled?color.textTertiary:color.textSecondary,
+                color:active?color.blue300:color.textSecondary,
                 fontSize:13,fontWeight:active?600:400,fontFamily:font.ui,textAlign:'left',width:'100%',
-                opacity:disabled?0.5:1,transition:'background 0.12s,color 0.12s',
+                transition:'background 0.12s,color 0.12s',
               }}
-              onMouseEnter={e=>{if(!active&&!disabled){e.currentTarget.style.background=color.hoverOverlay;e.currentTarget.style.color=color.textPrimary}}}
-              onMouseLeave={e=>{if(!active&&!disabled){e.currentTarget.style.background='transparent';e.currentTarget.style.color=color.textSecondary}}}>
+              onMouseEnter={e=>{if(!active){e.currentTarget.style.background=color.hoverOverlay;e.currentTarget.style.color=color.textPrimary}}}
+              onMouseLeave={e=>{if(!active){e.currentTarget.style.background='transparent';e.currentTarget.style.color=color.textSecondary}}}>
               <Icon size={15} strokeWidth={active?2.5:1.8}/>
               {label}
             </button>

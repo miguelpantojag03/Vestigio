@@ -60,6 +60,12 @@ pub fn run() {
       sql: include_str!("../migrations/0009_attachments_no_relic_fk.sql"),
       kind: MigrationKind::Up,
     },
+    Migration {
+      version: 10,
+      description: "add_trash",
+      sql: include_str!("../migrations/0010_trash.sql"),
+      kind: MigrationKind::Up,
+    },
   ];
 
   tauri::Builder::default()

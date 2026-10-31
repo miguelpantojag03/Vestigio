@@ -51,7 +51,7 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
 
   return (
     <motion.div
-      drag
+      drag={!relic.deletedAt}
       dragSnapToOrigin
       dragElastic={0.12}
       dragMomentum={false}

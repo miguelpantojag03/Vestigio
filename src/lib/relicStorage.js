@@ -63,6 +63,7 @@ function fromRow(row) {
     linkedFileMtime: row.linked_file_mtime ?? null,
     linkedFileCopiedPath: row.linked_file_copied_path ?? null,
     projectId: row.project_id ?? null,
+    deletedAt: row.deleted_at ?? null,
   }
 }
 
@@ -243,12 +244,46 @@ export async function updateRelic(userId, id, patch) {
   return getRelics(userId)
 }
 
-export async function deleteRelic(userId, id) {
+/** Moves relics to the trash. Rows and files stay, so this can be undone. */
+export async function trashRelics(userId, ids) {
+  return setDeletedAt(userId, ids, new Date().toISOString())
+}
+
+export async function restoreRelics(userId, ids) {
+  return setDeletedAt(userId, ids, null)
+}
+
+async function setDeletedAt(userId, ids, deletedAt) {
+  const db = await getDb()
+  try {
+    for (const id of ids) {
+      await db.execute(`UPDATE relics SET deleted_at=$1 WHERE id=$2 AND user_id=$3`, [deletedAt, id, userId])
+    }
+  } catch (err) {
+    console.error('[relicStorage] setDeletedAt failed:', err)
+    throw new Error(i18n.t('relics.errors.updateFailed'), { cause: err })
+  }
+  return getRelics(userId)
+}
+
+/** Permanently deletes relics: rows and files. Only the trash calls this. */
+export async function deleteRelics(userId, ids) {
+  for (const id of ids) await deleteRelicData(userId, id)
+  return getRelics(userId)
+}
+
+export async function emptyTrash(userId) {
+  const db = await getDb()
+  const rows = await db.select(`SELECT id FROM relics WHERE user_id=$1 AND deleted_at IS NOT NULL`, [userId])
+  return deleteRelics(userId, rows.map(r => r.id))
+}
+
+async function deleteRelicData(userId, id) {
   const db = await getDb()
   const [existing] = await db.select(
     `SELECT cover_image_path, linked_file_copied_path FROM relics WHERE id=$1 AND user_id=$2`, [id, userId]
   )
-  if (!existing) return getRelics(userId)
+  if (!existing) return
   try {
     // Explicit cascade: attachments deliberately has no foreign key (see
     // migration 0009), and spelling out the rest keeps all of it in one place.
@@ -266,5 +301,4 @@ export async function deleteRelic(userId, id) {
   try {
     await remove(`${await getAttachmentsDir()}/${id}`, { recursive: true })
   } catch { /* best effort — the relic may simply have no attachments folder */ }
-  return getRelics(userId)
 }
