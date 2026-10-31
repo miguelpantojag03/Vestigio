@@ -157,7 +157,8 @@
 }
 /* Glass on glass collapses legibility, and a nested backdrop-filter has nothing
    to blur anyway: a menu opening from the top bar is a solid surface. */
-.glass .glass-neutral {
+.glass .glass-neutral,
+body > .scrim .glass-neutral { /* confirm dialogs portal to the body, but open over modals */
   background: var(--bg-elevated);
 }
 
