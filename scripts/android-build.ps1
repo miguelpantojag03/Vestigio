@@ -10,7 +10,6 @@ param(
   [ValidateSet('aarch64', 'x86_64')] [string]$Arch = 'aarch64',
   [ValidateSet('debug', 'release')] [string]$Profile = 'release'
 )
-$ErrorActionPreference = 'Stop'
 
 $freeGb = (Get-PSDrive (Get-Location).Drive.Name).Free / 1GB
 if ($freeGb -lt 6) { throw "Only $([math]::Round($freeGb, 1)) GB free. The build needs about 6 GB; filling the disk can disrupt other running apps." }
