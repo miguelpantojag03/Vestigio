@@ -1,6 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Vestigio",
+  "productName": "VESTIGIO",
+  "mainBinaryName": "VESTIGIO",
   "version": "0.1.0",
   "identifier": "com.archivomuerto.app",
   "build": {
@@ -12,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "Vestigio",
+        "title": "VESTIGIO",
         "width": 1440,
         "height": 900,
         "minWidth": 1024,
