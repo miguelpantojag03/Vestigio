@@ -1,12 +1,17 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { motion, useIsPresent } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { useFocusTrap } from '../hooks/useFocusTrap.js'
 
 // Render inside an <AnimatePresence> (see Dashboard) to get the exit
 // animation: it leaves the way it came, along the same path.
 export default function Modal({ title, onClose, children }) {
+  const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
+  const dialogRef = useRef(null)
+  useFocusTrap(dialogRef)
   // While animating out the modal is still mounted, but it's already gone as
   // far as the user is concerned. Closing or saving a second time here would
   // re-run those handlers, and NewRelicModal's close deletes staged attachments.
@@ -34,6 +39,10 @@ export default function Modal({ title, onClose, children }) {
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <motion.div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         initial={{ opacity: 0, y: 16, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 16, scale: 0.97 }}
@@ -47,6 +56,7 @@ export default function Modal({ title, onClose, children }) {
           <span style={{ fontSize: 17, fontWeight: 500, fontFamily: font.display, color: color.textPrimary }}>{title}</span>
           <button
             onClick={onClose}
+            aria-label={t('common.close')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: color.textSecondary, padding: 4 }}
             onMouseEnter={e => e.currentTarget.style.color = color.textPrimary}
             onMouseLeave={e => e.currentTarget.style.color = color.textSecondary}

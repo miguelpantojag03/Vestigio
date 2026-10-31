@@ -144,7 +144,7 @@
   "topbar": {
     "searchPlaceholder": "Search your museum of ideas…",
     "globalSearchPlaceholder": "Search the whole archive, any status…",
-    "filters": { "all": "All", "visuals": "Visuals", "drafts": "Drafts" },
+    "filters": { "all": "All", "visuals": "Visuals", "drafts": "Text" },
     "searchFilters": {
       "allCategories": "All categories",
       "allCauses": "Any cause",
@@ -226,8 +226,8 @@
     }
   },
   "revivalZone": {
-    "tag": "revival zone",
-    "label": "Drag any relic here to bring it back to the active project."
+    "tag": "revive",
+    "label": "Drop or throw a relic here to revive it."
   },
   "relicDetails": {
     "title": "Relic Details",
@@ -444,7 +444,8 @@
     "regenerating": "Regenerating…",
     "errorUnavailable": "The AI service isn't available right now.",
     "errorRateLimit": "Rate limit reached. Try again in a moment.",
-    "errorGeneric": "AI request failed. Try again."
+    "errorOffline": "No internet connection. The AI needs it; the rest of the app keeps working.",
+    "errorGeneric": "The AI could not respond. Try again in a moment."
   },
   "userMenu": {
     "menuLabel": "User menu",

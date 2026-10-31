@@ -39,6 +39,7 @@ export default function Sidebar({
           const desc  = t(`sidebar.nav.${id}Desc`)
           return (
             <button key={id} onClick={()=>onSection(id)}
+              aria-current={active?'page':undefined}
               title={desc}
               style={{
                 display:'flex',alignItems:'center',gap:10,padding:'7px 12px',borderRadius:radius.control,border:'none',

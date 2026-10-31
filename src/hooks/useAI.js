@@ -35,7 +35,9 @@ export function useAI() {
       return result
     } catch (err) {
       if (err.name === 'AbortError') return null
-      const msg = err.message?.includes('API error 403')
+      const msg = !navigator.onLine
+        ? t('ai.errorOffline')
+        : err.message?.includes('API error 403')
         ? t('ai.errorUnavailable')
         : /429|rate.?limit/i.test(err.message ?? '')
         ? t('ai.errorRateLimit')

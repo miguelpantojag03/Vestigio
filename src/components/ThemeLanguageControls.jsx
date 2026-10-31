@@ -11,7 +11,7 @@ const THEME_ORDER = ['light', 'dark', 'auto']
 const LANG_ORDER   = ['es', 'en']
 
 // Small glass dropdown shared shape for both the theme and language pickers.
-function IconDropdown({ icon: Icon, current, options, renderLabel, onPick, align = 'right' }) {
+function IconDropdown({ icon: Icon, label, current, options, renderLabel, onPick, align = 'right' }) {
   const { color, radius, font, spring } = useTheme()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
@@ -25,6 +25,7 @@ function IconDropdown({ icon: Icon, current, options, renderLabel, onPick, align
   return (
     <div ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
       <motion.button whileTap={{ scale: 0.97 }} onClick={() => setOpen(o => !o)}
+        title={label} aria-label={label} aria-expanded={open}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: 32, height: 32, borderRadius: radius.control,
@@ -73,16 +74,16 @@ export function ThemeControl() {
   const { mode, setMode } = useTheme()
   const Icon = THEME_ICONS[mode]
   return (
-    <IconDropdown icon={Icon} current={mode} options={THEME_ORDER} onPick={setMode}
+    <IconDropdown icon={Icon} label={t('topbar.theme')} current={mode} options={THEME_ORDER} onPick={setMode}
       renderLabel={opt => t(`theme.${opt}`)} />
   )
 }
 
 export function LanguageControl() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const current = i18n.language?.startsWith('en') ? 'en' : 'es'
   return (
-    <IconDropdown icon={Languages} current={current} options={LANG_ORDER} onPick={setLanguage}
+    <IconDropdown icon={Languages} label={t('topbar.language')} current={current} options={LANG_ORDER} onPick={setLanguage}
       renderLabel={opt => opt.toUpperCase()} />
   )
 }

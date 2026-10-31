@@ -41,7 +41,7 @@ const dark = {
   terracotta300: '#E0B3AA', terracotta500: '#C97B6E', terracotta700: '#8C4F45',
 
   bgBase: '#0E1114', bgSurface: '#141920', bgElevated: '#1B232B', bgBorder: '#26323C',
-  textPrimary: '#ECEEF0', textSecondary: '#949CA6', textTertiary: '#636B74',
+  textPrimary: '#ECEEF0', textSecondary: '#949CA6', textTertiary: '#8A929C',
   onPrimary: '#0E1114',
 
   shadowSm: '0 2px 8px -2px rgba(14,17,20,0.4)',
@@ -66,7 +66,7 @@ const light = {
   terracotta300: '#9A4A3C', terracotta500: '#9A4A3C', terracotta700: '#6E2F26',
 
   bgBase: '#F2EFE8', bgSurface: '#F8F5EF', bgElevated: '#FFFFFF', bgBorder: '#DEDAD0',
-  textPrimary: '#1C1B18', textSecondary: '#6B675E', textTertiary: '#9B968A',
+  textPrimary: '#1C1B18', textSecondary: '#6B675E', textTertiary: '#6E695E',
   onPrimary: '#FFFFFF',
 
   shadowSm: '0 2px 8px -2px rgba(28,27,24,0.08)',

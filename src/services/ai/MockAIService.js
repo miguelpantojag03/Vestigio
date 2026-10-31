@@ -84,7 +84,7 @@ const MockAIService = {
       'Alto — el concepto de base resuelve un problema real; vale la pena retomarlo.',
       'Medio — necesita ajustes pero la dirección es sólida.',
       'Alto — se descartó por motivos de proceso, no de concepto.',
-      'Medio — combinalo con restricciones nuevas para una iteración más fuerte.',
+      'Medio — combínalo con restricciones nuevas para una iteración más fuerte.',
     ] : [
       'High — the core concept solves a real problem; worth revisiting in Q3.',
       'Medium — needs refinement but the direction is sound.',
@@ -92,10 +92,10 @@ const MockAIService = {
       'Medium — pair it with newer constraints for a stronger iteration.',
     ]
     const suggestions = isEs(lang) ? [
-      'Combinala con los lineamientos de marca actuales y revisala de nuevo.',
-      `Explorá una versión simplificada de "${relic.title}" pensada para mobile.`,
-      'Compartila con el resto del equipo — alguien más puede ver el camino.',
-      'Marcala como referencia para el próximo sprint de diseño.',
+      'Combínala con los lineamientos de marca actuales y revísala de nuevo.',
+      `Explora una versión simplificada de "${relic.title}" pensada para mobile.`,
+      'Compártela con el resto del equipo — alguien más puede ver el camino.',
+      'Márcala como referencia para el próximo sprint de diseño.',
     ] : [
       'Pair with current brand guidelines and re-evaluate.',
       `Explore a simplified version of "${relic.title}" for mobile-first contexts.`,
@@ -127,12 +127,12 @@ const MockAIService = {
         overview: `Tu archivo tiene ${relics.length} reliquias en ${Object.keys(cats).length} categorías. La mayoría de las ideas descartadas caen en ${topCat}, lo que sugiere que ahí es donde tu equipo experimenta con más audacia.`,
         patterns: [
           ...(causePattern ?? []),
-          `${topCat} es tu categoría más activa — considerá dedicarle sesiones de revival propias.`,
+          `${topCat} es tu categoría más activa — considera dedicarle sesiones de revival propias.`,
           'Las ideas descartadas por motivos técnicos suelen envejecer bien — la tecnología cambia, los conceptos no.',
           `${revivedCount} reliquias ya fueron revividas, lo que muestra un retorno real sobre tu archivo.`,
         ],
         topRevivalCandidates: revivable,
-        tip: 'Revisá las reliquias de más de 90 días — la distancia suele revelar valor que la urgencia esconde.',
+        tip: 'Revisa las reliquias de más de 90 días — la distancia suele revelar valor que la urgencia esconde.',
       }
     }
     return {

@@ -73,7 +73,7 @@
   --bg-border:    #26323C;
   --text-primary:   #ECEEF0;
   --text-secondary: #949CA6;
-  --text-tertiary:  #636B74;
+  --text-tertiary:  #8A929C;
 
   /* Radius scale — tier communicates hierarchy, never uniform */
   --radius-chip:    6px;
@@ -108,7 +108,7 @@
   --terracotta-300: #9A4A3C; --terracotta-500: #9A4A3C; --terracotta-700: #6E2F26;
 
   --bg-base: #F2EFE8; --bg-surface: #F8F5EF; --bg-elevated: #FFFFFF; --bg-border: #DEDAD0;
-  --text-primary: #1C1B18; --text-secondary: #6B675E; --text-tertiary: #9B968A;
+  --text-primary: #1C1B18; --text-secondary: #6B675E; --text-tertiary: #6E695E;
 
   --shadow-sm: 0 2px 8px -2px rgba(28,27,24,0.08);
   --shadow-md: 0 8px 24px -6px rgba(28,27,24,0.1);

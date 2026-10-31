@@ -7,13 +7,14 @@
 //   ...
 //   if (await confirm({ title: '...', message: '...', danger: true })) { ... }
 
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { AlertTriangle, Info } from 'lucide-react'
 import { motion, AnimatePresence, useIsPresent } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
+import { useFocusTrap } from '../hooks/useFocusTrap.js'
 
 // ── Hook ──────────────────────────────────────────────────────────
 // One store and one component per useConfirm() call, created once: a component
@@ -71,6 +72,21 @@ function ConfirmModal({ title, message, danger, confirmLabel, cancelLabel, onCon
   const { color, radius, font, spring } = useTheme()
   const Icon = danger ? AlertTriangle : Info
   const isPresent = useIsPresent()
+  const dialogRef = useRef(null)
+  useFocusTrap(dialogRef)
+
+  // Escape answers this dialog only, in the capture phase, so it can't also
+  // close a modal underneath it.
+  useEffect(() => {
+    if (!isPresent) return
+    function onKeyDown(e) {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      onCancel()
+    }
+    window.addEventListener('keydown', onKeyDown, true)
+    return () => window.removeEventListener('keydown', onKeyDown, true)
+  }, [isPresent, onCancel])
 
   return (
       <motion.div
@@ -87,6 +103,10 @@ function ConfirmModal({ title, message, danger, confirmLabel, cancelLabel, onCon
         }}
       >
         <motion.div
+          ref={dialogRef}
+          role="alertdialog"
+          aria-modal="true"
+          aria-label={title}
           initial={{ opacity: 0, y: 12, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.97 }}
