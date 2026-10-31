@@ -15,6 +15,7 @@ import { getThumbnail }     from './Thumbnails.jsx'
 import { TagsInput }        from './NewRelicModal.jsx'
 import AITagSuggester       from './AITagSuggester.jsx'
 import LinkedFilePicker     from './LinkedFilePicker.jsx'
+import DeathCausePicker     from './DeathCausePicker.jsx'
 import { pickFileToLink, secureCopy } from '../lib/fileLinks.js'
 import { CATEGORIES, CATEGORY_FILTER_MAP, CATEGORY_THUMB_MAP } from '../constants/categories.js'
 import { Spinner }          from './FormField.jsx'
@@ -140,6 +141,8 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
   const [responsible, setResponsible] = useState(relic.responsible??'')
   const [tags,        setTags]        = useState(relic.tags??[])
   const [coverImage,  setCoverImage]  = useState(relic.coverImage??null)
+  const [deathCause,  setDeathCause]  = useState(relic.deathCause??null)
+  const [deathDetail, setDeathDetail] = useState(relic.deathCauseDetail??'')
   const [linkedFile, setLinkedFile] = useState(
     relic.linkedFilePath ? { path: relic.linkedFilePath, mtime: relic.linkedFileMtime } : null
   )
@@ -162,6 +165,8 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
     notes !== (relic.notes ?? '') ||
     responsible !== (relic.responsible ?? '') ||
     coverImage !== (relic.coverImage ?? null) ||
+    deathCause !== (relic.deathCause ?? null) ||
+    deathDetail !== (relic.deathCauseDetail ?? '') ||
     tags.length !== (relic.tags ?? []).length ||
     tags.some((tag, i) => tag !== (relic.tags ?? [])[i]) ||
     (linkedFile?.path ?? null) !== (relic.linkedFilePath ?? null) ||
@@ -208,6 +213,7 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
         description:description.trim(),
         notes:notes.trim(),responsible:responsible.trim(),
         tags,
+        deathCause,deathCauseDetail:deathDetail.trim()||null,
         filter:CATEGORY_FILTER_MAP[category],thumbnail:CATEGORY_THUMB_MAP[category],
         linkedFilePath: linkedFile?.path ?? null,
         linkedFileMtime: linkedFile?.mtime ?? null,
@@ -283,6 +289,12 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
           <div>
             <label style={S.label}>{t('modals.newRelic.additionalNotes')}</label>
             <textarea style={{...S.input,resize:'vertical',minHeight:50}} value={notes} onChange={e=>setNotes(e.target.value)} rows={2} onFocus={S.focus} onBlur={S.blur}/>
+          </div>
+
+          {/* Cause of death */}
+          <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
+            <div style={{...S.sec,marginBottom:10}}>{t('deathCause.title')}</div>
+            <DeathCausePicker cause={deathCause} detail={deathDetail} onCauseChange={setDeathCause} onDetailChange={setDeathDetail}/>
           </div>
 
           {/* Tags */}

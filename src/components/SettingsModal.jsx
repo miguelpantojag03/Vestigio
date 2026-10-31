@@ -41,7 +41,7 @@ function ExportSection({ userId }) {
 
   async function exportCSV() {
     const relics  = (await getRelics(userId)).filter(r => !r.deletedAt)
-    const headers = ['id','title','category','description','project','status','createdAt','discardedAt','tags','responsible']
+    const headers = ['id','title','category','description','project','status','deathCause','deathCauseDetail','createdAt','discardedAt','tags','responsible']
     const rows    = relics.map(r =>
       headers.map(h => {
         const v = h === 'tags' ? (r.tags||[]).join(';') : (r[h]??'')

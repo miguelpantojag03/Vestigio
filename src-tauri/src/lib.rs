@@ -66,6 +66,12 @@ pub fn run() {
       sql: include_str!("../migrations/0010_trash.sql"),
       kind: MigrationKind::Up,
     },
+    Migration {
+      version: 11,
+      description: "add_death_cause",
+      sql: include_str!("../migrations/0011_death_cause.sql"),
+      kind: MigrationKind::Up,
+    },
   ];
 
   tauri::Builder::default()

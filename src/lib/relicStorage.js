@@ -36,6 +36,8 @@ function toRow(relic) {
     linked_file_mtime: relic.linkedFileMtime ?? null,
     linked_file_copied_path: relic.linkedFileCopiedPath ?? null,
     project_id: relic.projectId ?? null,
+    death_cause: relic.deathCause ?? null,
+    death_cause_detail: relic.deathCauseDetail ?? null,
   }
 }
 
@@ -64,6 +66,8 @@ function fromRow(row) {
     linkedFileCopiedPath: row.linked_file_copied_path ?? null,
     projectId: row.project_id ?? null,
     deletedAt: row.deleted_at ?? null,
+    deathCause: row.death_cause ?? null,
+    deathCauseDetail: row.death_cause_detail ?? null,
   }
 }
 
@@ -102,12 +106,13 @@ async function insertRelicRow(db, userId, relic, coverImagePath) {
   await db.execute(
     `INSERT INTO relics (id,user_id,category,title,description,notes,responsible,project,
        filter,thumbnail,cover_image_path,tags,status,revived_at,created_at,discarded_at,updated_at,
-       linked_file_path,linked_file_mtime,linked_file_copied_path,project_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
+       linked_file_path,linked_file_mtime,linked_file_copied_path,project_id,death_cause,death_cause_detail)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23)`,
     [row.id, row.user_id, row.category, row.title, row.description, row.notes, row.responsible,
      row.project, row.filter, row.thumbnail, coverImagePath, row.tags, row.status, row.revived_at,
      row.created_at, row.discarded_at, row.updated_at,
-     row.linked_file_path, row.linked_file_mtime, row.linked_file_copied_path, row.project_id]
+     row.linked_file_path, row.linked_file_mtime, row.linked_file_copied_path, row.project_id,
+     row.death_cause, row.death_cause_detail]
   )
   await recordStatusTransition(db, relic.id, null, 'archived', row.created_at)
 }
@@ -200,6 +205,7 @@ export async function updateRelic(userId, id, patch) {
     linkedFilePath: 'linked_file_path', linkedFileMtime: 'linked_file_mtime',
     linkedFileCopiedPath: 'linked_file_copied_path',
     projectId: 'project_id',
+    deathCause: 'death_cause', deathCauseDetail: 'death_cause_detail',
   }
   const sets = []
   const vals = []

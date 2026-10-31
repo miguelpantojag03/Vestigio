@@ -105,9 +105,10 @@ Title: "${relic.title}"
 Category: ${relic.category}
 Description: "${relic.description}"
 Notes: "${relic.notes || 'None'}"
+Stated cause of death: ${relic.deathCause ?? 'Not recorded'}${relic.deathCauseDetail ? ` ("${relic.deathCauseDetail}")` : ''}
 Status: ${relic.revived ? 'Already revived' : 'Archived'}
 Return JSON: {
-  "summary": "one sentence on why it was likely discarded",
+  "summary": "one sentence on why it was discarded; rely on the stated cause of death when there is one, otherwise say what likely happened",
   "potential": "one sentence on revival potential",
   "suggestions": ["action 1", "action 2"]
 }`,
@@ -125,9 +126,10 @@ Return JSON: {
         id: r.id, title: r.title, category: r.category,
         description: r.description?.slice(0, 80),
         revived: r.revived, discardedAt: r.discardedAt,
+        causeOfDeath: r.deathCause ?? undefined, causeDetail: r.deathCauseDetail?.slice(0, 80),
       }))
       const result = await callAI(systemPrompt(lang),
-        `Analyze this team's creative archive and provide insights.
+        `Analyze this team's creative archive and provide insights. Where causeOfDeath is recorded, weigh recurring causes in the patterns.
 Archive (${relics.length} relics): ${JSON.stringify(summaries)}
 Return JSON: {
   "overview": "2-3 sentence overview of the archive",

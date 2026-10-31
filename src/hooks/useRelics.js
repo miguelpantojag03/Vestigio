@@ -30,6 +30,7 @@ export function useRelics(userId, currentProjectId) {
   // shortcut, this is a real cross-status/cross-date query.
   const [searchCategory, setSearchCategory] = useState('all')
   const [searchStatus,   setSearchStatus]   = useState('all')   // 'all'|'archived'|'revived'
+  const [searchCause,    setSearchCause]    = useState('all')   // 'all'|a DEATH_CAUSES key
   const [searchDateFrom, setSearchDateFrom] = useState('')
   const [searchDateTo,   setSearchDateTo]   = useState('')
   const [sortField,  setSortField]  = useState('date')     // 'date'|'title'|'category'|'status'
@@ -93,6 +94,7 @@ export function useRelics(userId, currentProjectId) {
     if (section === 'search') {
       if (searchCategory !== 'all') list = list.filter(r => r.category === searchCategory)
       if (searchStatus   !== 'all') list = list.filter(r => r.status === searchStatus)
+      if (searchCause    !== 'all') list = list.filter(r => r.deathCause === searchCause)
       if (searchDateFrom) list = list.filter(r => (r.discardedAt ?? '') >= searchDateFrom)
       if (searchDateTo)   list = list.filter(r => (r.discardedAt ?? '') <= `${searchDateTo}T23:59:59.999Z`)
     }
@@ -104,6 +106,7 @@ export function useRelics(userId, currentProjectId) {
       r.description?.toLowerCase().includes(q) ||
       r.category?.toLowerCase().includes(q) ||
       r.responsible?.toLowerCase().includes(q) ||
+      r.deathCauseDetail?.toLowerCase().includes(q) ||
       (r.tags ?? []).some(t => t.toLowerCase().includes(q))
     )
 
@@ -111,7 +114,7 @@ export function useRelics(userId, currentProjectId) {
     if (section !== 'recent') list = [...list].sort(sortFn(sortField, sortDir))
 
     return list
-  }, [relics, trashed, section, filter, search, sortField, sortDir, searchCategory, searchStatus, searchDateFrom, searchDateTo, currentProjectId])
+  }, [relics, trashed, section, filter, search, sortField, sortDir, searchCategory, searchStatus, searchCause, searchDateFrom, searchDateTo, currentProjectId])
 
   const projectRelics = useMemo(
     () => currentProjectId ? relics.filter(r => r.projectId === currentProjectId) : relics,
@@ -188,6 +191,7 @@ export function useRelics(userId, currentProjectId) {
     search, setSearch,
     searchCategory, setSearchCategory,
     searchStatus,   setSearchStatus,
+    searchCause,    setSearchCause,
     searchDateFrom, setSearchDateFrom,
     searchDateTo,   setSearchDateTo,
     sortField, sortDir, cycleSort,

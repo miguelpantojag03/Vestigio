@@ -549,6 +549,15 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
             ))}
           </div>
 
+          {/* cause of death */}
+          {(relic.deathCause || relic.deathCauseDetail) && (
+            <div style={{padding:'8px 12px',borderRadius:8,background:color.bgElevated,border:`1px solid ${color.bgBorder}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:color.textSecondary,marginBottom:4,letterSpacing:'0.06em'}}>{t('deathCause.title').toUpperCase()}</div>
+              {relic.deathCause && <div style={{fontSize:11,color:color.textPrimary,fontWeight:600,lineHeight:1.6}}>{t(`deathCause.${relic.deathCause}`)}</div>}
+              {relic.deathCauseDetail && <div style={{fontSize:11,color:color.textPrimary,lineHeight:1.6}}>{relic.deathCauseDetail}</div>}
+            </div>
+          )}
+
           {/* notes */}
           {relic.notes && (
             <div style={{padding:'8px 12px',borderRadius:8,background:color.bgElevated,border:`1px solid ${color.bgBorder}`}}>

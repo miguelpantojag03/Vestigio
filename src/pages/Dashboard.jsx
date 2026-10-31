@@ -85,12 +85,13 @@ export default function Dashboard() {
     filter, setFilter, section, setSection,
     search, setSearch, sortField, sortDir, cycleSort,
     searchCategory, setSearchCategory, searchStatus, setSearchStatus,
+    searchCause, setSearchCause,
     searchDateFrom, setSearchDateFrom, searchDateTo, setSearchDateTo,
     stats, add, update, revive, trash, restore, removeForever, emptyTrash,
   } = useRelics(user?.id, currentProjectId)
 
   const hasSearchActivity = section === 'search'
-    ? !!search || searchCategory !== 'all' || searchStatus !== 'all' || !!searchDateFrom || !!searchDateTo
+    ? !!search || searchCategory !== 'all' || searchStatus !== 'all' || searchCause !== 'all' || !!searchDateFrom || !!searchDateTo
     : !!search
 
   const [dragOver,      setDragOver]      = useState(false)
@@ -272,6 +273,7 @@ export default function Dashboard() {
               section={section}
               searchCategory={searchCategory} setSearchCategory={setSearchCategory}
               searchStatus={searchStatus} setSearchStatus={setSearchStatus}
+              searchCause={searchCause} setSearchCause={setSearchCause}
               searchDateFrom={searchDateFrom} setSearchDateFrom={setSearchDateFrom}
               searchDateTo={searchDateTo} setSearchDateTo={setSearchDateTo}
               onNewRelic={()=>setShowNew(true)}

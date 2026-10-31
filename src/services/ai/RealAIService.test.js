@@ -43,6 +43,16 @@ describe('makeRealAIService shape guarantees', () => {
     })
   })
 
+  it('tells the model the recorded cause of death instead of leaving it to guess', async () => {
+    mockModelReply('{"summary":"s"}')
+
+    await service.analyzeRelic({ title: 't', deathCause: 'budget', deathCauseDetail: 'Funding fell through' }, 'es')
+
+    const body = JSON.parse(fetch.mock.calls[0][1].body)
+    expect(body.messages[0].content).toContain('budget')
+    expect(body.messages[0].content).toContain('Funding fell through')
+  })
+
   it('never returns undefined analysis fields', async () => {
     mockModelReply('{"summary":"Why it was dropped."}')
 

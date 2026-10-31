@@ -145,6 +145,7 @@
     "filters": { "all": "All", "visuals": "Visuals", "drafts": "Drafts" },
     "searchFilters": {
       "allCategories": "All categories",
+      "allCauses": "Any cause",
       "allStatuses": "Any status",
       "archived": "Archived",
       "revived": "Revived",
@@ -397,6 +398,18 @@
       "noCopy": "There is no internal copy saved.",
       "missing": "The linked file no longer exists at that location."
     }
+  },
+  "deathCause": {
+    "title": "Cause of death",
+    "scope": "Too ambitious",
+    "timing": "Ran out of time",
+    "budget": "No budget",
+    "technical": "Technical problem",
+    "feedback": "Rejected",
+    "direction": "Change of direction",
+    "replaced": "A better idea came along",
+    "other": "Other",
+    "detailPlaceholder": "What happened? (optional)"
   },
   "ai": {
     "clickToAdd": "Click to add",

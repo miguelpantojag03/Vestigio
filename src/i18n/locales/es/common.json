@@ -146,6 +146,7 @@
     "searchFilters": {
       "allCategories": "Todas las categorías",
       "allStatuses": "Cualquier estado",
+      "allCauses": "Cualquier causa",
       "archived": "Archivadas",
       "revived": "Revividas",
       "dateFrom": "Desde",
@@ -397,6 +398,18 @@
       "noCopy": "No hay copia interna guardada.",
       "missing": "El archivo vinculado ya no existe en esa ruta."
     }
+  },
+  "deathCause": {
+    "title": "Causa de muerte",
+    "scope": "Demasiado ambiciosa",
+    "timing": "Sin tiempo",
+    "budget": "Sin presupuesto",
+    "technical": "Problema técnico",
+    "feedback": "Rechazada",
+    "direction": "Cambio de rumbo",
+    "replaced": "Hubo una idea mejor",
+    "other": "Otra",
+    "detailPlaceholder": "¿Qué pasó? (opcional)"
   },
   "ai": {
     "clickToAdd": "Clic para agregar",

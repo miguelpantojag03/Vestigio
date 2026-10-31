@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 import { ThemeControl, LanguageControl } from './ThemeLanguageControls.jsx'
 import { CATEGORIES } from '../constants/categories.js'
+import { DEATH_CAUSES } from '../constants/deathCauses.js'
 
 const FILTERS  = ['all', 'visuals', 'drafts']
 const SORT_OPT = ['date', 'title', 'category', 'status']
@@ -36,18 +37,19 @@ function DateInput({ value, onChange, title }) {
   )
 }
 
-// Global search filter row — category / status / date range. Separate from
+// Global search filter row — category / status / cause / date range. Separate from
 // the gallery-only visuals/drafts tabs: this searches across every status.
 function SearchFilters({
   searchCategory, setSearchCategory, searchStatus, setSearchStatus,
+  searchCause, setSearchCause,
   searchDateFrom, setSearchDateFrom, searchDateTo, setSearchDateTo,
 }) {
   const { t } = useTranslation()
   const { color, font } = useTheme()
-  const active = searchCategory !== 'all' || searchStatus !== 'all' || searchDateFrom || searchDateTo
+  const active = searchCategory !== 'all' || searchStatus !== 'all' || searchCause !== 'all' || searchDateFrom || searchDateTo
 
   function clear() {
-    setSearchCategory('all'); setSearchStatus('all'); setSearchDateFrom(''); setSearchDateTo('')
+    setSearchCategory('all'); setSearchStatus('all'); setSearchCause('all'); setSearchDateFrom(''); setSearchDateTo('')
   }
 
   return (
@@ -60,6 +62,10 @@ function SearchFilters({
         <option value="all">{t('topbar.searchFilters.allStatuses')}</option>
         <option value="archived">{t('topbar.searchFilters.archived')}</option>
         <option value="revived">{t('topbar.searchFilters.revived')}</option>
+      </SelectControl>
+      <SelectControl value={searchCause} onChange={setSearchCause}>
+        <option value="all">{t('topbar.searchFilters.allCauses')}</option>
+        {DEATH_CAUSES.map(c => <option key={c} value={c}>{t(`deathCause.${c}`)}</option>)}
       </SelectControl>
       <DateInput value={searchDateFrom} onChange={setSearchDateFrom} title={t('topbar.searchFilters.dateFrom')}/>
       <span style={{color:color.textTertiary,fontSize:12,fontFamily:font.ui}}>–</span>
@@ -77,6 +83,7 @@ function SearchFilters({
 export default function TopBar({
   search, setSearch, filter, setFilter, onNewRelic, sortField, sortDir, cycleSort, section,
   searchCategory, setSearchCategory, searchStatus, setSearchStatus,
+  searchCause, setSearchCause,
   searchDateFrom, setSearchDateFrom, searchDateTo, setSearchDateTo,
 }) {
   const { t } = useTranslation()
@@ -125,6 +132,7 @@ export default function TopBar({
         <SearchFilters
           searchCategory={searchCategory} setSearchCategory={setSearchCategory}
           searchStatus={searchStatus} setSearchStatus={setSearchStatus}
+          searchCause={searchCause} setSearchCause={setSearchCause}
           searchDateFrom={searchDateFrom} setSearchDateFrom={setSearchDateFrom}
           searchDateTo={searchDateTo} setSearchDateTo={setSearchDateTo}
         />

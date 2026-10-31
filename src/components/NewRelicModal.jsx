@@ -21,6 +21,7 @@ import AITagSuggester                from './AITagSuggester.jsx'
 import DejaVuWarning                 from './DejaVuWarning.jsx'
 import { findSimilarRelics }         from '../lib/similarity.js'
 import LinkedFilePicker              from './LinkedFilePicker.jsx'
+import DeathCausePicker              from './DeathCausePicker.jsx'
 import { pickFileToLink, secureCopy } from '../lib/fileLinks.js'
 import { useTheme }                  from '../context/ThemeContext.jsx'
 import { registerUnsavedChanges }    from '../lib/windowCloseGuard.js'
@@ -170,6 +171,8 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
   const [responsible, setResponsible] = useState(user?.fullName??'')
   const [tags,        setTags]        = useState([])
   const [coverImage,  setCoverImage]  = useState(null)
+  const [deathCause,  setDeathCause]  = useState(null)
+  const [deathDetail, setDeathDetail] = useState('')
   const [linkedFile,     setLinkedFile]     = useState(null) // {path, mtime} | null
   const [secureCopyFlag, setSecureCopyFlag] = useState(false)
   const [titleError,  setTitleError]  = useState('')
@@ -201,7 +204,8 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
   // Let the native window-close guard know this form has unsaved content
   const isDirty = Boolean(
     title.trim() || description.trim() || notes.trim() ||
-    tags.length > 0 || coverImage || attachments.length > 0 || linkedFile
+    tags.length > 0 || coverImage || attachments.length > 0 || linkedFile ||
+    deathCause || deathDetail.trim()
   )
   useEffect(() => {
     registerUnsavedChanges(isDirty)
@@ -252,6 +256,8 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
         notes:       notes.trim(),
         responsible: responsible.trim(),
         coverImage:  coverImage??null,
+        deathCause,
+        deathCauseDetail: deathDetail.trim() || null,
         tags,
         project:     projectName||user?.activeProject||'General',
         projectId,
@@ -340,6 +346,12 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
         <div>
           <label style={S.label}>{t('modals.newRelic.additionalNotes')}</label>
           <textarea style={{...S.input,resize:'vertical',minHeight:50}} value={notes} onChange={e=>setNotes(e.target.value)} placeholder={t('modals.newRelic.notesPlaceholder')} rows={2} onFocus={S.focus} onBlur={S.blur}/>
+        </div>
+
+        {/* Cause of death */}
+        <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
+          <div style={{...S.sec,marginBottom:10}}>{t('deathCause.title')}</div>
+          <DeathCausePicker cause={deathCause} detail={deathDetail} onCauseChange={setDeathCause} onDetailChange={setDeathDetail}/>
         </div>
 
         {/* Tags */}

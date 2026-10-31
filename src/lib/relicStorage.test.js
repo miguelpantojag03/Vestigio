@@ -159,6 +159,21 @@ describe('demo account seed', () => {
   })
 })
 
+describe('cause of death', () => {
+  it('round-trips through add and update, and defaults to none', async () => {
+    const [added] = await addRelic(USER, makeRelic('r1', { deathCause: 'budget', deathCauseDetail: 'Funding fell through' }))
+    expect(added.deathCause).toBe('budget')
+    expect(added.deathCauseDetail).toBe('Funding fell through')
+
+    const [updated] = await updateRelic(USER, 'r1', { deathCause: null, deathCauseDetail: null })
+    expect(updated.deathCause).toBeNull()
+    expect(updated.deathCauseDetail).toBeNull()
+
+    const list = await addRelic(USER, makeRelic('r2'))
+    expect(list.find(r => r.id === 'r2').deathCause).toBeNull()
+  })
+})
+
 describe('trash', () => {
   it('keeps rows and files while in the trash, and restores intact', async () => {
     await addRelic(USER, makeRelic('r1'))
