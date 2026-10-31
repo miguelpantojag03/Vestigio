@@ -3,7 +3,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { getRelics, addRelic, updateRelic, deleteRelic } from '../lib/relicStorage.js'
-import { deleteAttachmentsForRelic }                     from '../lib/attachmentStorage.js'
 
 // sort helpers
 function sortFn(field, dir) {
@@ -144,13 +143,9 @@ export function useRelics(userId, currentProjectId) {
 
   const remove = useCallback(async (id) => {
     if (!userId) return
-    // Drop the relic record first: if the app dies right after this, the
-    // worst case is an orphaned attachment blob (harmless, invisible) —
-    // not a relic card left pointing at attachments that no longer exist.
     const updated = await deleteRelic(userId, id)
     setRelics(updated)
     if (selectedId === id) setSelectedId(updated[0]?.id ?? null)
-    await deleteAttachmentsForRelic(id)
     return updated
   }, [userId, selectedId])
 

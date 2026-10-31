@@ -5,7 +5,7 @@
 // camelCase relic objects, same shape as before.
 
 import { getDb } from './db.js'
-import { getCoversDir } from './fsPaths.js'
+import { getAttachmentsDir, getCoversDir } from './fsPaths.js'
 import { writeFile, remove, exists } from '@tauri-apps/plugin-fs'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { DEMO_RELICS } from '../data/mockRelics.js'
@@ -190,19 +190,25 @@ export async function updateRelic(userId, id, patch) {
 export async function deleteRelic(userId, id) {
   const db = await getDb()
   const [existing] = await db.select(
-    `SELECT cover_image_path FROM relics WHERE id=$1 AND user_id=$2`, [id, userId]
+    `SELECT cover_image_path, linked_file_copied_path FROM relics WHERE id=$1 AND user_id=$2`, [id, userId]
   )
+  if (!existing) return getRelics(userId)
   try {
-    // Explicit cascade — tauri-plugin-sql's pooled connections aren't
-    // guaranteed to have PRAGMA foreign_keys=ON, so ON DELETE CASCADE in
-    // the schema is documentation, not something we rely on firing.
+    // Explicit cascade: attachments deliberately has no foreign key (see
+    // migration 0009), and spelling out the rest keeps all of it in one place.
     await db.execute(`DELETE FROM attachments WHERE relic_id=$1`, [id])
+    await db.execute(`DELETE FROM drafts WHERE relic_id=$1`, [id])
     await db.execute(`DELETE FROM relic_status_history WHERE relic_id=$1`, [id])
     await db.execute(`DELETE FROM relics WHERE id=$1 AND user_id=$2`, [id, userId])
-    if (existing?.cover_image_path) await deleteCoverFileIfExists(existing.cover_image_path)
   } catch (err) {
     console.error('[relicStorage] deleteRelic failed:', err)
-    // Preserve the old behavior: a delete failure doesn't throw.
+    throw new Error('Could not delete relic. Please try again.', { cause: err })
   }
+  // Only once the rows are gone — a failed delete must leave the files alone.
+  await deleteCoverFileIfExists(existing.cover_image_path)
+  await deleteCoverFileIfExists(existing.linked_file_copied_path)
+  try {
+    await remove(`${await getAttachmentsDir()}/${id}`, { recursive: true })
+  } catch { /* best effort — the relic may simply have no attachments folder */ }
   return getRelics(userId)
 }
