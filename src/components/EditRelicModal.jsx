@@ -149,7 +149,7 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
 
   const {
     attachments,loading:attLoading,error:attError,setError:setAttError,
-    addFiles,remove:removeAttRaw,download:downloadAtt,getPreviewURL,
+    addFiles,remove:removeAttRaw,download:downloadAtt,open:openAtt,getPreviewURL,
   } = useAttachments(relic.id, user?.id)
 
   // Let the native window-close guard know this form has unsaved edits.
@@ -303,7 +303,7 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
 
           {/* Attachments */}
           <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
-            <AttachmentList attachments={attachments} loading={attLoading} error={attError} onAddFiles={handleAddFiles} onDelete={handleDeleteAtt} onDownload={downloadAtt} getPreviewURL={getPreviewURL}/>
+            <AttachmentList attachments={attachments} loading={attLoading} error={attError} onAddFiles={handleAddFiles} onDelete={handleDeleteAtt} onOpen={openAtt} onDownload={downloadAtt} getPreviewURL={getPreviewURL}/>
           </div>
         </div>
 

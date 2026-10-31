@@ -188,7 +188,7 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
 
   const {
     attachments, loading:attLoading, error:attError, setError:setAttError,
-    addFiles, remove:removeAtt, download:downloadAtt, getPreviewURL,
+    addFiles, remove:removeAtt, download:downloadAtt, open:openAtt, getPreviewURL,
   } = useAttachments(tmpRelicId, user?.id)
 
   // Cleanup orphan attachments if the modal is closed without saving
@@ -369,7 +369,7 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
           <AttachmentList
             attachments={attachments} loading={attLoading} error={attError}
             onAddFiles={handleAddFiles} onDelete={handleDeleteAtt}
-            onDownload={downloadAtt} getPreviewURL={getPreviewURL}/>
+            onOpen={openAtt} onDownload={downloadAtt} getPreviewURL={getPreviewURL}/>
         </div>
       </div>
 

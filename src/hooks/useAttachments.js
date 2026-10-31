@@ -9,31 +9,44 @@ import {
   addAttachment,
   deleteAttachment,
   downloadAttachment,
+  openAttachment,
   createPreviewURL,
 } from '../lib/attachmentStorage.js'
+import { onRelicDataChanged } from '../lib/relicDataEvents.js'
 import { validateFile } from '../constants/fileTypes.js'
 
 export function useAttachments(relicId, userId) {
   const { t } = useTranslation()
   const [attachments, setAttachments] = useState([])
   const [loadedRelicId, setLoadedRelicId] = useState(null)
+  const [reloadKey,   setReloadKey]   = useState(0)
   const [loading,     setLoading]     = useState(false)
   const [error,       setError]       = useState(null)
 
   const fetching = Boolean(relicId) && relicId !== loadedRelicId
-  const visibleAttachments = relicId ? attachments : []
+  // Never the previous relic's list while this one's is on its way.
+  const visibleAttachments = relicId && !fetching ? attachments : []
   const visibleError = fetching ? null : error
 
-  // ── Load attachments when relicId changes ─────────────────────
+  // ── Load attachments when relicId changes, or anything mounted changes them ──
   useEffect(() => {
     if (!relicId) return
     let cancelled = false
     getAttachments(relicId)
       .then(data => { if (!cancelled) setAttachments(data) })
-      .catch(() => { if (!cancelled) setError(t('attachments.errors.loadFailed')) })
+      .catch(() => {
+        if (cancelled) return
+        setAttachments([])
+        setError(t('attachments.errors.loadFailed'))
+      })
       .finally(() => { if (!cancelled) setLoadedRelicId(relicId) })
     return () => { cancelled = true }
-  }, [relicId, t])
+  }, [relicId, reloadKey, t])
+
+  useEffect(() => {
+    if (!relicId) return
+    return onRelicDataChanged(relicId, () => setReloadKey(key => key + 1))
+  }, [relicId])
 
   // ── Add one or more files ─────────────────────────────────────
   const addFiles = useCallback(async (files) => {
@@ -64,11 +77,9 @@ export function useAttachments(relicId, userId) {
     setLoading(true)
     setError(null)
     try {
-      const added = await Promise.all(
+      return await Promise.all(
         fileArray.map(f => addAttachment(relicId, userId, f))
       )
-      setAttachments(prev => [...prev, ...added])
-      return added
     } catch (err) {
       setError(t('attachments.errors.saveFailed'))
       throw err
@@ -82,7 +93,6 @@ export function useAttachments(relicId, userId) {
     setError(null)
     try {
       await deleteAttachment(attId)
-      setAttachments(prev => prev.filter(a => a.id !== attId))
     } catch (err) {
       setError(t('attachments.errors.deleteFailed'))
       throw err
@@ -90,15 +100,24 @@ export function useAttachments(relicId, userId) {
   }, [t])
 
   // ── Download (Save As…) ───────────────────────────────────────
-  const download = useCallback((att) => {
+  const download = useCallback(async (att) => {
     try {
-      downloadAttachment(att)
+      await downloadAttachment(att)
     } catch {
       setError(t('attachments.errors.downloadFailed'))
     }
   }, [t])
 
-  // ── Open for preview (returns a temporary object URL) ─────────
+  // ── Open with the system's default app ────────────────────────
+  const open = useCallback(async (att) => {
+    try {
+      await openAttachment(att)
+    } catch {
+      setError(t('attachments.errors.openFailed'))
+    }
+  }, [t])
+
+  // ── Open for in-app preview (returns an asset URL) ────────────
   const getPreviewURL = useCallback((att) => {
     try {
       return createPreviewURL(att)
@@ -116,6 +135,7 @@ export function useAttachments(relicId, userId) {
     addFiles,
     remove,
     download,
+    open,
     getPreviewURL,
   }
 }

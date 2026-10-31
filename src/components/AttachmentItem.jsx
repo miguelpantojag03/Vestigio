@@ -33,6 +33,7 @@ function FileIcon({ ext, size = 18 }) {
 export default function AttachmentItem({
   attachment,
   onPreview,
+  onOpen,
   onDownload,
   onDelete,
 }) {
@@ -111,7 +112,7 @@ export default function AttachmentItem({
           <ActionBtn
             icon={<ExternalLink size={13} />}
             title={t('attachments.openWith')}
-            onClick={() => onDownload(attachment)}
+            onClick={() => onOpen(attachment)}
             color={color.textSecondary}
           />
         )}

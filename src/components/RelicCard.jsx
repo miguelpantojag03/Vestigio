@@ -6,6 +6,7 @@ import { getThumbnail } from './Thumbnails.jsx'
 import { countAttachments } from '../lib/attachmentStorage.js'
 import { countOpenDrafts } from '../lib/draftStorage.js'
 import { getLinkStatus } from '../lib/fileLinks.js'
+import { onRelicDataChanged } from '../lib/relicDataEvents.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 import { formatDate } from '../lib/formatDate.js'
@@ -28,15 +29,15 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
   const [draftCount, setDraftCount] = useState(0)
   const [linkBroken, setLinkBroken] = useState(false)
 
-  // Load attachment count asynchronously (lightweight, no blob transfer)
+  // Load badge counts asynchronously (lightweight, no blob transfer)
   useEffect(() => {
     if (!relic?.id) return
-    countAttachments(relic.id).then(setAttCount).catch(() => {})
-  }, [relic?.id])
-
-  useEffect(() => {
-    if (!relic?.id) return
-    countOpenDrafts(relic.id).then(setDraftCount).catch(() => {})
+    function loadCounts() {
+      countAttachments(relic.id).then(setAttCount).catch(() => {})
+      countOpenDrafts(relic.id).then(setDraftCount).catch(() => {})
+    }
+    loadCounts()
+    return onRelicDataChanged(relic.id, loadCounts)
   }, [relic?.id])
 
   useEffect(() => {

@@ -369,6 +369,7 @@
       "saveFailed": "Could not save attachment(s). Please try again.",
       "deleteFailed": "Could not delete the attachment. Please try again.",
       "downloadFailed": "Could not download the file.",
+      "openFailed": "Could not open the file.",
       "previewFailed": "Could not open the file for preview."
     }
   },

@@ -369,6 +369,7 @@
       "saveFailed": "No se pudieron guardar los archivos adjuntos. Inténtalo de nuevo.",
       "deleteFailed": "No se pudo eliminar el archivo adjunto. Inténtalo de nuevo.",
       "downloadFailed": "No se pudo descargar el archivo.",
+      "openFailed": "No se pudo abrir el archivo.",
       "previewFailed": "No se pudo abrir el archivo para vista previa."
     }
   },

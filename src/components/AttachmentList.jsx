@@ -23,6 +23,7 @@ export default function AttachmentList({
   error,
   onAddFiles,
   onDelete,
+  onOpen,
   onDownload,
   getPreviewURL,
   readOnly = false,
@@ -102,6 +103,7 @@ export default function AttachmentList({
               <AttachmentItem
                 attachment={att}
                 onPreview={handlePreview}
+                onOpen={onOpen}
                 onDownload={onDownload}
                 onDelete={onDelete}
               />

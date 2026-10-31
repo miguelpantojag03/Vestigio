@@ -17,8 +17,11 @@
 
 import { getDb } from './db.js'
 import { getAttachmentsDir } from './fsPaths.js'
-import { writeFile, remove, mkdir } from '@tauri-apps/plugin-fs'
+import { writeFile, remove, mkdir, copyFile } from '@tauri-apps/plugin-fs'
+import { save } from '@tauri-apps/plugin-dialog'
+import { openPath } from '@tauri-apps/plugin-opener'
 import { convertFileSrc } from '@tauri-apps/api/core'
+import { emitRelicDataChanged } from './relicDataEvents.js'
 
 function makeId() {
   return `att_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
@@ -63,6 +66,7 @@ export async function addAttachment(relicId, userId, file) {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
     [id, relicId, userId, file.name, ext, mimeType, file.size, path, createdAt]
   )
+  emitRelicDataChanged(relicId)
   return { id, relicId, userId, originalName: file.name, extension: ext, mimeType, size: file.size, createdAt, filePath: path }
 }
 
@@ -91,13 +95,16 @@ export async function getAttachment(id) {
  */
 export async function deleteAttachment(id) {
   const db = await getDb()
-  const [row] = await db.select(`SELECT file_path FROM attachments WHERE id=$1`, [id])
+  const [row] = await db.select(`SELECT file_path, relic_id FROM attachments WHERE id=$1`, [id])
   await db.execute(`DELETE FROM attachments WHERE id=$1`, [id])
-  if (row) { try { await remove(row.file_path) } catch { /* best effort */ } }
+  if (row) {
+    try { await remove(row.file_path) } catch { /* best effort */ }
+    emitRelicDataChanged(row.relic_id)
+  }
 }
 
 /**
- * Delete all attachments for a relic (called when a relic is deleted).
+ * Delete all attachments staged for a relic that never got saved.
  */
 export async function deleteAttachmentsForRelic(relicId) {
   const db = await getDb()
@@ -136,16 +143,18 @@ export function createPreviewURL(attachment) {
 }
 
 /**
- * Trigger a "Save As…" download for an attachment. Sync, same reason
- * as createPreviewURL above.
+ * "Save As…" through the native dialog. A plain <a download> can't do this:
+ * the browser ignores `download` on the cross-origin asset URL.
+ * @returns {Promise<boolean>} false if the user cancelled
  */
-export function downloadAttachment(attachment) {
-  const url = convertFileSrc(attachment.filePath)
-  const a   = document.createElement('a')
-  a.href     = url
-  a.download = attachment.originalName
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  // No URL.revokeObjectURL here — asset:// URLs aren't object URLs.
+export async function downloadAttachment(attachment) {
+  const dest = await save({ defaultPath: attachment.originalName })
+  if (!dest) return false
+  await copyFile(attachment.filePath, dest)
+  return true
+}
+
+/** Opens the attachment with the system's default app for its type. */
+export function openAttachment(attachment) {
+  return openPath(attachment.filePath)
 }
