@@ -20,6 +20,7 @@ import AIInsightsPanel     from '../components/AIInsightsPanel.jsx'
 import BulkActionBar       from '../components/BulkActionBar.jsx'
 import SettingsModal       from '../components/SettingsModal.jsx'
 import { useTheme }        from '../context/ThemeContext.jsx'
+import { isInsideRect, releaseHitsRect } from '../lib/momentum.js'
 
 // ── Stats bar ─────────────────────────────────────────────────────
 function StatsBar({ stats }) {
@@ -96,6 +97,7 @@ export default function Dashboard() {
     : !!search
 
   const [dragOver,      setDragOver]      = useState(false)
+  const [dragging,      setDragging]      = useState(false)
   const [justRevived,   setJustRevived]   = useState(false)
   const [showNew,       setShowNew]       = useState(false)
   const [editRelic,     setEditRelic]     = useState(null)
@@ -136,22 +138,25 @@ export default function Dashboard() {
   }, [navigate, push, t])
 
   // Drag & drop — spring-driven (framer-motion), not native HTML5 DnD
-  function isOverRevivalZone(point) {
-    const el = revivalZoneRef.current
-    if (!el || !point) return false
-    const r = el.getBoundingClientRect()
-    return point.x >= r.left && point.x <= r.right && point.y >= r.top && point.y <= r.bottom
+  function revivalZoneRect() {
+    return revivalZoneRef.current?.getBoundingClientRect() ?? null
   }
   function handleCardDrag(id, info) {
-    setDragOver(isOverRevivalZone(info.point))
+    const rect = revivalZoneRect()
+    setDragging(true)
+    setDragOver(!!rect && isInsideRect(info.point, rect))
   }
   function handleCardDragEnd(id, info) {
-    const hit = isOverRevivalZone(info.point)
+    const rect = revivalZoneRect()
+    // Where the gesture was heading, not just where it let go: a flick toward
+    // the zone counts as reaching it.
+    const hit = !!rect && releaseHitsRect(info.point, info.velocity, rect)
+    setDragging(false)
     setDragOver(false)
     if (!hit) return
-    revive(id).catch(err => push(err.message, 'error'))
     setSelectedId(id)
-    push(t('dashboard.toast.revived'), 'success')
+    if (relics.find(r => r.id === id)?.revived) return
+    handleRevive(id)
     setJustRevived(true)
     setTimeout(() => setJustRevived(false), 700)
   }
@@ -160,7 +165,7 @@ export default function Dashboard() {
   // framer-motion's onDragEnd never fires — without this, the Revival Zone
   // can stay highlighted as "drag over" even though nothing is being dragged.
   useEffect(() => {
-    function resetDragOver() { setDragOver(false) }
+    function resetDragOver() { setDragOver(false); setDragging(false) }
     window.addEventListener('blur', resetDragOver)
     return () => window.removeEventListener('blur', resetDragOver)
   }, [])
@@ -417,6 +422,7 @@ export default function Dashboard() {
             {section !== 'deleted' && !selectionMode && (
               <RevivalZone
                 ref={revivalZoneRef}
+                isDragging={dragging}
                 isDragOver={dragOver}
                 justRevived={justRevived}
               />

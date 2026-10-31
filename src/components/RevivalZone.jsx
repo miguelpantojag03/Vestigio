@@ -5,7 +5,7 @@ import { Sparkles, RotateCcw } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 
-const RevivalZone = forwardRef(function RevivalZone({ isDragOver, justRevived }, ref) {
+const RevivalZone = forwardRef(function RevivalZone({ isDragging, isDragOver, justRevived }, ref) {
   const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
   return (
@@ -13,8 +13,9 @@ const RevivalZone = forwardRef(function RevivalZone({ isDragOver, justRevived },
       ref={ref}
       className="glass"
       animate={{
-        scale: isDragOver ? 1.015 : 1,
-        borderColor: isDragOver ? alpha(color.blue300, 0.7) : alpha(color.blue500, 0.4),
+        // Rises to meet a card as soon as one is picked up: says where it can go.
+        scale: isDragOver ? 1.015 : isDragging ? 1.005 : 1,
+        borderColor: isDragOver ? alpha(color.blue300, 0.7) : isDragging ? alpha(color.blue300, 0.5) : alpha(color.blue500, 0.4),
       }}
       transition={spring.tap}
       style={{
@@ -22,7 +23,7 @@ const RevivalZone = forwardRef(function RevivalZone({ isDragOver, justRevived },
         display: 'flex', alignItems: 'center', gap: 14,
         padding: '12px 18px', borderRadius: radius.glass,
         borderStyle: 'dashed', borderWidth: 1.5,
-        background: isDragOver ? alpha(color.blue500, 0.22) : alpha(color.blue500, 0.08),
+        background: isDragOver ? alpha(color.blue500, 0.22) : isDragging ? alpha(color.blue500, 0.14) : alpha(color.blue500, 0.08),
         boxShadow: isDragOver ? `0 0 32px ${alpha(color.blue500, 0.28)}` : 'none',
         zIndex: 10,
       }}
