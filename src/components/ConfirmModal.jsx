@@ -7,40 +7,62 @@
 //   ...
 //   if (await confirm({ title: '...', message: '...', danger: true })) { ... }
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { AlertTriangle, Info } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useIsPresent } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 
 // ── Hook ──────────────────────────────────────────────────────────
-export function useConfirm() {
-  const [state,   setState]   = useState(null)  // { title, message, danger, confirmLabel, cancelLabel }
-  const resolveRef            = useRef(null)
+// One store and one component per useConfirm() call, created once: a component
+// defined during render is a new type every time, so the dialog would remount
+// (replaying its animation, losing focus) whenever the parent re-rendered.
+function createConfirm() {
+  let state = null // { title, message, danger, confirmLabel, cancelLabel }
+  let resolve = null
+  const listeners = new Set()
 
-  const confirm = useCallback(({ title, message, danger = false, confirmLabel, cancelLabel }) => {
-    return new Promise(resolve => {
-      resolveRef.current = resolve
+  function setState(next) {
+    state = next
+    listeners.forEach(listener => listener())
+  }
+  function subscribe(listener) {
+    listeners.add(listener)
+    return () => listeners.delete(listener)
+  }
+  function settle(answer) {
+    setState(null)
+    resolve?.(answer)
+    resolve = null
+  }
+
+  function confirm({ title, message, danger = false, confirmLabel, cancelLabel }) {
+    return new Promise(res => {
+      resolve = res
       setState({ title, message, danger, confirmLabel, cancelLabel })
     })
-  }, [])
+  }
 
-  function handleConfirm() { setState(null); resolveRef.current?.(true)  }
-  function handleCancel()  { setState(null); resolveRef.current?.(false) }
-
+  // Portaled: inside a modal, position:fixed is relative to the modal's
+  // transformed surface, not the window.
   function ConfirmModalUI() {
-    if (!state) return null
-    return (
-      <ConfirmModal
-        {...state}
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
+    const current = useSyncExternalStore(subscribe, () => state)
+    return createPortal(
+      <AnimatePresence>
+        {current && <ConfirmModal {...current} onConfirm={() => settle(true)} onCancel={() => settle(false)} />}
+      </AnimatePresence>,
+      document.body
     )
   }
 
   return { confirm, ConfirmModalUI }
+}
+
+export function useConfirm() {
+  const [value] = useState(createConfirm)
+  return value
 }
 
 // ── Presentational component ──────────────────────────────────────
@@ -48,15 +70,18 @@ function ConfirmModal({ title, message, danger, confirmLabel, cancelLabel, onCon
   const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
   const Icon = danger ? AlertTriangle : Info
+  const isPresent = useIsPresent()
 
   return (
-    <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={spring.tap}
+        inert={!isPresent}
+        className="scrim"
         onClick={e => { if (e.target === e.currentTarget) onCancel() }}
         style={{
           position: 'fixed', inset: 0, zIndex: 400,
-          background: color.scrimBg, backdropFilter: 'blur(3px)',
+          background: color.scrimBg,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: 24,
         }}
@@ -64,7 +89,7 @@ function ConfirmModal({ title, message, danger, confirmLabel, cancelLabel, onCon
         <motion.div
           initial={{ opacity: 0, y: 12, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+          exit={{ opacity: 0, y: 12, scale: 0.97 }}
           transition={spring.drop}
           className="glass glass-neutral"
           style={{
@@ -122,6 +147,5 @@ function ConfirmModal({ title, message, danger, confirmLabel, cancelLabel, onCon
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
   )
 }

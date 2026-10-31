@@ -3,6 +3,7 @@
 // Dashboard owns what's selected and what each action does.
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Trash2, Undo2, X, CheckSquare } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext.jsx'
@@ -13,7 +14,7 @@ export default function BulkActionBar({
   onMove, onAddTag, onTrash, onRestore, onDeleteForever,
 }) {
   const { t } = useTranslation()
-  const { color, radius, font } = useTheme()
+  const { color, radius, font, spring } = useTheme()
   const [tag, setTag] = useState('')
   const none = count === 0
 
@@ -35,7 +36,9 @@ export default function BulkActionBar({
   }
 
   return (
-    <div className="glass glass-neutral"
+    <motion.div className="glass glass-neutral"
+      initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:16 }}
+      transition={spring.tap}
       style={{
         position:'sticky', bottom:14, zIndex:15, marginTop:16,
         display:'flex', alignItems:'center', gap:8, flexWrap:'wrap',
@@ -80,6 +83,6 @@ export default function BulkActionBar({
       <button onClick={onCancel} style={{ ...button, opacity:1, cursor:'pointer', color:color.textSecondary }}>
         <X size={12}/> {t('common.cancel')}
       </button>
-    </div>
+    </motion.div>
   )
 }

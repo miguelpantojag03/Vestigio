@@ -396,6 +396,7 @@ export default function Dashboard() {
                 </div>
               )}
 
+              <AnimatePresence>
               {selectionMode && (
                 <BulkActionBar
                   count={bulkIds.length}
@@ -410,6 +411,7 @@ export default function Dashboard() {
                   onDeleteForever={() => handleDeleteForever(bulkIds)}
                 />
               )}
+              </AnimatePresence>
             </div>
 
             {section !== 'deleted' && !selectionMode && (
@@ -439,8 +441,10 @@ export default function Dashboard() {
       </div>
 
       {/* Modals */}
+      <AnimatePresence>
       {showNew && (
         <NewRelicModal
+          key="new"
           onClose={()=>setShowNew(false)}
           onAdd={handleAddRelic}
           relics={relics}
@@ -450,11 +454,12 @@ export default function Dashboard() {
         />
       )}
       {editRelic && (
-        <EditRelicModal relic={editRelic} onClose={()=>setEditRelic(null)} onSave={handleSaveEdit}/>
+        <EditRelicModal key="edit" relic={editRelic} onClose={()=>setEditRelic(null)} onSave={handleSaveEdit}/>
       )}
       {showSettings && (
-        <SettingsModal userId={user?.id} onClose={()=>setShowSettings(false)}/>
+        <SettingsModal key="settings" userId={user?.id} onClose={()=>setShowSettings(false)}/>
       )}
+      </AnimatePresence>
     </div>
   )
 }

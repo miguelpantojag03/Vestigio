@@ -73,10 +73,10 @@ export default function ProjectSwitcher({ projects, currentProject, onSwitchProj
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity:0, y:-6, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:-6, scale:0.98 }}
+            initial={{ opacity:0, y:6, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:6, scale:0.98 }}
             transition={spring.tap}
             className="glass glass-neutral"
-            style={{ position:'absolute', bottom:'calc(100% + 8px)', left:0, right:0, borderRadius:radius.card, padding:'4px 0', zIndex:50, maxHeight:260, overflowY:'auto' }}>
+            style={{ position:'absolute', bottom:'calc(100% + 8px)', left:0, right:0, borderRadius:radius.card, padding:'4px 0', zIndex:50, maxHeight:260, overflowY:'auto', transformOrigin:'bottom center' }}>
             {projects.map(p => (
               <div key={p.id} style={{ display:'flex', alignItems:'center' }}>
                 {renamingId === p.id ? (

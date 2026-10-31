@@ -57,7 +57,7 @@ export default function UserMenu({ user, onOpenSettings }) {
             transition={spring.tap}
             className="glass glass-neutral"
             style={{
-              position:'absolute',bottom:'130%',left:'50%',transform:'translateX(-50%)',
+              position:'absolute',bottom:'130%',right:0,transformOrigin:'bottom right',
               borderRadius:radius.card,
               padding:'4px 0',minWidth:160,zIndex:100,
             }}>

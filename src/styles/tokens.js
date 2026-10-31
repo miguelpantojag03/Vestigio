@@ -24,10 +24,12 @@ export function alpha(hex, a) {
   return `rgba(${r},${g},${b},${a})`
 }
 
-// framer-motion spring presets
+// framer-motion spring presets. Critically damped (bounce 0): overshoot only
+// makes sense on something the user threw, not on a menu that just appeared.
+// `duration` here is the spring's response, not a fixed length.
 export const spring = {
-  tap:   { type: 'spring', stiffness: 380, damping: 28 },
-  drop:  { type: 'spring', stiffness: 220, damping: 20, mass: 1.1 },
+  tap:   { type: 'spring', bounce: 0, duration: 0.3 },
+  drop:  { type: 'spring', bounce: 0, duration: 0.4 },
   theme: { type: 'spring', stiffness: 160, damping: 22 }, // theme switch — the one exception to "single moment per screen"
 }
 

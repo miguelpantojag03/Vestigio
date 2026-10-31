@@ -168,10 +168,21 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Press feedback: on pointer-down and instant, on every button. Inline
+   transforms (motion.button, positioned icons) take precedence over this. */
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar        { width: 4px; }
 ::-webkit-scrollbar-track  { background: transparent; }
 ::-webkit-scrollbar-thumb  { background: var(--bg-border); border-radius: 999px; }
+
+.scrim {
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
 
 /* Input placeholder */
 ::placeholder { color: var(--text-tertiary); }

@@ -55,6 +55,7 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
       dragSnapToOrigin
       dragElastic={0.12}
       dragMomentum={false}
+      whileTap={{ scale: 0.98 }}
       whileDrag={{ scale: 1.05, zIndex: 50, boxShadow: `0 24px 56px -14px ${alpha(color.blue500, 0.45)}` }}
       onDrag={(e, info) => onCardDrag?.(relic.id, info)}
       onDragEnd={(e, info) => onCardDragEnd?.(relic.id, info)}
@@ -67,19 +68,20 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(relic.id) }
       }}
       initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.88, transition: spring.tap }}
-      transition={{ ...spring.tap, delay: animIndex * 0.025 }}
+      // The stagger belongs to the entrance only: on `transition` it would also
+      // delay the press and drag response, by more the further down the card is.
+      animate={{ opacity: 1, y: 0, transition: { ...spring.tap, delay: Math.min(animIndex, 12) * 0.025 } }}
+      exit={{ opacity: 0, y: 8 }}
+      transition={spring.tap}
       style={{
         borderRadius:radius.card, padding:10, cursor:'pointer',
         background:color.bgElevated,
         border: isSelected ? `1.5px solid ${color.blue500}` : `1px solid ${color.bgBorder}`,
         boxShadow: isSelected ? `0 0 0 3px ${alpha(color.blue500, 0.18)},0 4px 24px ${alpha(color.blue500, 0.10)}` : 'none',
-        opacity: isSelected ? 1 : 0.72,
         userSelect:'none',
       }}
-      onMouseEnter={e=>{ if(!isSelected) e.currentTarget.style.opacity='1' }}
-      onMouseLeave={e=>{ if(!isSelected) e.currentTarget.style.opacity='0.72' }}
+      onMouseEnter={e=>{ if(!isSelected) e.currentTarget.style.borderColor=color.blue800 }}
+      onMouseLeave={e=>{ if(!isSelected) e.currentTarget.style.borderColor=color.bgBorder }}
     >
       {/* Thumbnail */}
       <div style={{height:100,borderRadius:radius.chip+2,overflow:'hidden',position:'relative',marginBottom:9}}>

@@ -43,6 +43,7 @@ function IconDropdown({ icon: Icon, current, options, renderLabel, onPick, align
             style={{
               position: 'absolute', top: 'calc(100% + 8px)', [align]: 0,
               borderRadius: radius.card, padding: '4px 0', minWidth: 140, zIndex: 50,
+              transformOrigin: `top ${align}`,
             }}>
             {options.map(opt => {
               const active = opt === current

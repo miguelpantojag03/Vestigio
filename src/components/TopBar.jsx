@@ -102,12 +102,10 @@ export default function TopBar({
   const currentLabel = t(`topbar.sort.${sortField}`) || t('topbar.sort.date')
 
   return (
-    <motion.div
+    <div
       className="glass glass-blue"
-      animate={{ padding: focused ? '14px 18px' : '10px 18px' }}
-      transition={spring.tap}
       style={{
-        display:'flex',alignItems:'center',gap:10,
+        display:'flex',alignItems:'center',gap:10,padding:'10px 18px',
         borderRadius:radius.glass,
         position:'sticky',top:14,zIndex:20,
         margin:'0 20px 18px',flexWrap:'wrap',
@@ -177,7 +175,7 @@ export default function TopBar({
               initial={{opacity:0,y:-6,scale:0.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-6,scale:0.98}}
               transition={spring.tap}
               className="glass glass-neutral"
-              style={{position:'absolute',top:'calc(100% + 8px)',right:0,borderRadius:radius.card,padding:'4px 0',minWidth:168,zIndex:50}}>
+              style={{position:'absolute',top:'calc(100% + 8px)',right:0,borderRadius:radius.card,padding:'4px 0',minWidth:168,zIndex:50,transformOrigin:'top right'}}>
               {SORT_OPT.map(field=>{
                 const current = sortField===field
                 return (
@@ -214,6 +212,6 @@ export default function TopBar({
         }}>
         <Plus size={14} strokeWidth={2.5}/> {t('topbar.newRelic')}
       </motion.button>
-    </motion.div>
+    </div>
   )
 }

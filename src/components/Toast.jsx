@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, useRef } from 'react'
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext.jsx'
 
 const ToastContext = createContext(null)
@@ -47,12 +48,15 @@ function getIcon(type, color) {
 }
 
 function ToastContainer({ toasts, onDismiss }) {
+  // In the app, stay over the gallery: the bottom-right corner is the details
+  // panel's action buttons, and just above the revival zone a drop still hits it.
+  const inApp = useLocation().pathname === '/app'
   return (
     <div
       style={{
         position: 'fixed',
-        bottom: 24,
-        right: 24,
+        bottom: inApp ? 88 : 24,
+        right: inApp ? 284 : 24,
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
@@ -76,7 +80,7 @@ function ToastItem({ toast, onDismiss }) {
       layout
       initial={{ opacity: 0, y: 12, scale: 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.15 } }}
+      exit={{ opacity: 0, y: 12, scale: 0.96 }}
       transition={spring.tap}
       className="glass glass-neutral"
       style={{
