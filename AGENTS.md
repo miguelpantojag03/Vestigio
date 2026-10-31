@@ -17,6 +17,7 @@ Note: the app was rebranded from "Archivo Muerto" to "Vestigio" in the UI/docs o
 - [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md) — technical overview, setup, auth contract, validation, and production notes
 - [docs/HIERARCHY.md](docs/HIERARCHY.md) — folder structure and dependency map
 - [docs/NAVIGATION.md](docs/NAVIGATION.md) — user flows and route behavior
+- [docs/ANDROID.md](docs/ANDROID.md) — building the APK, signing, and what differs from desktop
 
 ## Run and validate
 
@@ -28,6 +29,7 @@ npm run dev           # frontend only, in a plain browser — no Tauri APIs
 npm run build         # frontend build Tauri bundles into the binary
 npx eslint src/       # project has no type checker; this is the correctness gate
 npm run test          # Vitest — unit tests for lib/auth logic, colocated as *.test.js next to the module
+./scripts/android-build.ps1  # APK for phones; see docs/ANDROID.md (needs ~6 GB free)
 ```
 
 - `npm run dev` / `npm run build` build the frontend alone — useful for fast iteration, but anything behind a Tauri API (window close guard, single-instance lock) is a no-op outside the native shell.
@@ -47,6 +49,12 @@ npm run test          # Vitest — unit tests for lib/auth logic, colocated as *
 - Relics are persisted via [src/lib/relicStorage.js](src/lib/relicStorage.js) and stored per user in browser storage.
 - User records and active session are managed in the auth layer and `localStorage` / `sessionStorage` helpers.
 - Demo data lives in [src/data/mockRelics.js](src/data/mockRelics.js); new users start empty unless seeded intentionally.
+
+### Platforms
+
+- The same code ships to desktop and Android. Layout differences go through `useIsMobile`/`useIsTouch` in [src/hooks/useViewport.js](src/hooks/useViewport.js); what Android itself can't do goes through `isAndroid` in [src/lib/platform.js](src/lib/platform.js).
+- Desktop-only plugins are gated in `Cargo.toml`, `lib.rs` (`#[cfg(desktop)]`) and `capabilities/desktop.json`, all three together.
+- Don't edit an applied migration: sqlx checksums them. sqlx opens connections with `foreign_keys=ON`, so a migration must never `DROP TABLE` a parent table, which would cascade to its children.
 
 ### UI organization
 
