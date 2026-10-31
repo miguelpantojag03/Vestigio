@@ -33,7 +33,7 @@ function ExportSection({ userId }) {
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href     = url
-    a.download = `archivo-muerto-export-${new Date().toISOString().slice(0,10)}.json`
+    a.download = `vestigio-export-${new Date().toISOString().slice(0,10)}.json`
     a.click()
     URL.revokeObjectURL(url)
     push(t('modals.settings.exportedJSON'), 'success')
@@ -48,12 +48,13 @@ function ExportSection({ userId }) {
         return `"${String(v).replace(/"/g,'""')}"`
       }).join(',')
     )
-    const csv  = [headers.join(','), ...rows].join('\n')
+    // The BOM is what makes Excel read this as UTF-8 instead of garbling accents.
+    const csv  = '\uFEFF' + [headers.join(','), ...rows].join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')
     a.href     = url
-    a.download = `archivo-muerto-export-${new Date().toISOString().slice(0,10)}.csv`
+    a.download = `vestigio-export-${new Date().toISOString().slice(0,10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
     push(t('modals.settings.exportedCSV'), 'success')

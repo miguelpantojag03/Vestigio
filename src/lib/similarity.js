@@ -8,8 +8,8 @@
 // needs real semantic comparison (embeddings or an LLM call), which is
 // a separate, opt-in tier — see the roadmap notes.
 
-// Relics saved with no description get this literal placeholder (see
-// NewRelicModal/EditRelicModal's handleSave) — without excluding it,
+// Relics saved with no description used to get this literal placeholder,
+// and older ones still have it stored — without excluding it,
 // any two undescribed relics would score as a perfect description
 // match purely by coincidence.
 const EMPTY_DESCRIPTION_PLACEHOLDER = 'no description.'

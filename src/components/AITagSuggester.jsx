@@ -65,7 +65,7 @@ export default function AITagSuggester({ title, description, category, currentTa
               }}
               onMouseEnter={e=>e.currentTarget.style.background=alpha(color.blue500, 0.22)}
               onMouseLeave={e=>e.currentTarget.style.background=alpha(color.blue500, 0.1)}
-              title="Click to add">
+              title={t('ai.clickToAdd')}>
               + {tag}
             </button>
           ))}

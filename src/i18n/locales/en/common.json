@@ -282,6 +282,7 @@
       "changeImage": "Change image",
       "uploadImage": "Upload image",
       "remove": "Remove",
+      "uploadCoverLabel": "Upload cover image",
       "imageHint": "JPG, PNG, WEBP · Max 5 MB",
       "details": "Details",
       "responsible": "Responsible",
@@ -351,6 +352,7 @@
     }
   },
   "attachments": {
+    "uploadLabel": "Upload attachment files",
     "sectionTitle": "Attachments",
     "noFiles": "No files attached yet.",
     "dropHere": "Drop files here",
@@ -373,7 +375,22 @@
       "previewFailed": "Could not open the file for preview."
     }
   },
+  "relics": {
+    "errors": {
+      "saveFailed": "Could not save the relic. Please try again.",
+      "updateFailed": "Could not update the relic. Please try again.",
+      "deleteFailed": "Could not delete the relic. Please try again."
+    }
+  },
+  "fileLinks": {
+    "errors": {
+      "noLink": "There is no linked file.",
+      "noCopy": "There is no internal copy saved.",
+      "missing": "The linked file no longer exists at that location."
+    }
+  },
   "ai": {
+    "clickToAdd": "Click to add",
     "suggestTags": "✦ Suggest tags with AI",
     "suggesting": "Suggesting…",
     "allAdded": "All suggested tags already added.",
@@ -394,6 +411,7 @@
     "errorGeneric": "AI request failed. Try again."
   },
   "userMenu": {
+    "menuLabel": "User menu",
     "profile": "Profile",
     "settings": "Settings",
     "signOut": "Sign out",

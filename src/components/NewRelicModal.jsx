@@ -105,7 +105,7 @@ function CoverImagePicker({ coverImage, onChange, fallbackThumb }) {
       {err&&<span style={{fontSize:11,color:color.terracotta500,padding:'4px 8px',borderRadius:5,background:alpha(color.terracotta500, 0.1)}}>{err}</span>}
       <input ref={inputRef} type="file" accept=".jpg,.jpeg,.png,.webp,.gif"
         onChange={e=>{const f=e.target.files[0];if(f)handleFile(f);e.target.value=''}}
-        style={{display:'none'}} aria-label="Upload cover image"/>
+        style={{display:'none'}} aria-label={t('modals.newRelic.uploadCoverLabel')}/>
     </div>
   )
 }
@@ -248,7 +248,7 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
         id:          tmpRelicId,
         category,
         title:       title.trim(),
-        description: description.trim()||'No description.',
+        description: description.trim(),
         notes:       notes.trim(),
         responsible: responsible.trim(),
         coverImage:  coverImage??null,

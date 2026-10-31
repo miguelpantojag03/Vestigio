@@ -282,6 +282,7 @@
       "changeImage": "Cambiar imagen",
       "uploadImage": "Subir imagen",
       "remove": "Quitar",
+      "uploadCoverLabel": "Subir imagen de portada",
       "imageHint": "JPG, PNG, WEBP · Máx 5 MB",
       "details": "Detalles",
       "responsible": "Responsable",
@@ -351,6 +352,7 @@
     }
   },
   "attachments": {
+    "uploadLabel": "Subir archivos adjuntos",
     "sectionTitle": "Archivos Adjuntos",
     "noFiles": "Aún no hay archivos adjuntos.",
     "dropHere": "Suelta los archivos aquí",
@@ -373,7 +375,22 @@
       "previewFailed": "No se pudo abrir el archivo para vista previa."
     }
   },
+  "relics": {
+    "errors": {
+      "saveFailed": "No se pudo guardar la reliquia. Intentá de nuevo.",
+      "updateFailed": "No se pudo actualizar la reliquia. Intentá de nuevo.",
+      "deleteFailed": "No se pudo eliminar la reliquia. Intentá de nuevo."
+    }
+  },
+  "fileLinks": {
+    "errors": {
+      "noLink": "No hay archivo vinculado.",
+      "noCopy": "No hay copia interna guardada.",
+      "missing": "El archivo vinculado ya no existe en esa ruta."
+    }
+  },
   "ai": {
+    "clickToAdd": "Clic para agregar",
     "suggestTags": "✦ Sugerir etiquetas con IA",
     "suggesting": "Sugiriendo…",
     "allAdded": "Todas las etiquetas sugeridas ya fueron añadidas.",
@@ -394,6 +411,7 @@
     "errorGeneric": "Falló el pedido a la IA. Probá de nuevo."
   },
   "userMenu": {
+    "menuLabel": "Menú de usuario",
     "profile": "Perfil",
     "settings": "Ajustes",
     "signOut": "Cerrar sesión",

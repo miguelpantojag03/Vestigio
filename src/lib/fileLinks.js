@@ -11,6 +11,7 @@ import { openPath } from '@tauri-apps/plugin-opener'
 import { exists, stat, copyFile } from '@tauri-apps/plugin-fs'
 import { join } from '@tauri-apps/api/path'
 import { getLinkedCopiesDir } from './fsPaths.js'
+import i18n from '../i18n/index.js'
 
 /**
  * Opens the native "choose a file" dialog and returns its path + mtime,
@@ -46,14 +47,14 @@ function fileLinkError(message, code) {
 
 /** Opens the linked file with the system's default app for its type. */
 export async function openLinkedFile(relic) {
-  if (!relic?.linkedFilePath) throw fileLinkError('No hay archivo vinculado.', 'none')
-  if (!(await exists(relic.linkedFilePath))) throw fileLinkError('El archivo vinculado ya no existe en esa ruta.', 'broken')
+  if (!relic?.linkedFilePath) throw fileLinkError(i18n.t('fileLinks.errors.noLink'), 'none')
+  if (!(await exists(relic.linkedFilePath))) throw fileLinkError(i18n.t('fileLinks.errors.missing'), 'broken')
   await openPath(relic.linkedFilePath)
 }
 
 /** Opens the internal backup copy instead (e.g. when the original link is broken). */
 export async function openCopiedFile(relic) {
-  if (!relic?.linkedFileCopiedPath) throw fileLinkError('No hay copia interna guardada.', 'none')
+  if (!relic?.linkedFileCopiedPath) throw fileLinkError(i18n.t('fileLinks.errors.noCopy'), 'none')
   await openPath(relic.linkedFileCopiedPath)
 }
 
@@ -62,12 +63,17 @@ export async function openCopiedFile(relic) {
  * @returns {Promise<string>} the new internal copy's absolute path
  */
 export async function secureCopy(relic) {
-  if (!relic?.linkedFilePath) throw fileLinkError('No hay archivo vinculado para copiar.', 'none')
-  if (!(await exists(relic.linkedFilePath))) throw fileLinkError('El archivo vinculado ya no existe — no se puede copiar.', 'broken')
+  if (!relic?.linkedFilePath) throw fileLinkError(i18n.t('fileLinks.errors.noLink'), 'none')
+  if (!(await exists(relic.linkedFilePath))) throw fileLinkError(i18n.t('fileLinks.errors.missing'), 'broken')
   const ext = relic.linkedFilePath.split('.').pop()?.toLowerCase() ?? ''
   const dir = await getLinkedCopiesDir()
   const dest = await join(dir, ext ? `${relic.id}.${ext}` : relic.id)
-  await copyFile(relic.linkedFilePath, dest)
+  try {
+    await copyFile(relic.linkedFilePath, dest)
+  } catch (err) {
+    console.error('[fileLinks] secureCopy failed:', err)
+    throw fileLinkError(i18n.t('relicDetails.linkedFile.copyError'), 'copy')
+  }
   return dest
 }
 

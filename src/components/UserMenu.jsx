@@ -47,7 +47,7 @@ export default function UserMenu({ user, onOpenSettings }) {
         style={{background:'none',border:'none',cursor:'pointer',color:open?color.textPrimary:color.textSecondary,padding:2,display:'flex',alignItems:'center',transition:'color 0.15s'}}
         onMouseEnter={e=>e.currentTarget.style.color=color.textPrimary}
         onMouseLeave={e=>{if(!open)e.currentTarget.style.color=color.textSecondary}}
-        aria-label="User menu">
+        aria-label={t('userMenu.menuLabel')}>
         <Settings size={14}/>
       </button>
 

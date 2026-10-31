@@ -96,7 +96,7 @@ export default function FileDropZone({ onFiles, disabled = false }) {
         accept={ACCEPT}
         onChange={handleChange}
         style={{ display: 'none' }}
-        aria-label="Upload attachment files"
+        aria-label={t('attachments.uploadLabel')}
       />
     </div>
   )

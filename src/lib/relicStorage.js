@@ -9,6 +9,7 @@ import { getAttachmentsDir, getCoversDir } from './fsPaths.js'
 import { writeFile, remove, exists } from '@tauri-apps/plugin-fs'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { DEMO_RELICS } from '../data/mockRelics.js'
+import i18n from '../i18n/index.js'
 
 const DEMO_USER_ID = 'user_demo_001'
 const DEMO_SEEDED_FLAG = 'demo_seeded_v1'
@@ -174,12 +175,14 @@ export async function getRelics(userId) {
 
 export async function addRelic(userId, relic) {
   const db = await getDb()
-  const coverImagePath = await persistCoverImage(relic.id, relic.coverImage)
+  let coverImagePath = null
   try {
+    coverImagePath = await persistCoverImage(relic.id, relic.coverImage)
     await insertRelicRow(db, userId, relic, coverImagePath)
   } catch (err) {
     console.error('[relicStorage] addRelic failed:', err)
-    throw new Error('Could not save relic. Please try again.', { cause: err })
+    await deleteCoverFileIfExists(coverImagePath)
+    throw new Error(i18n.t('relics.errors.saveFailed'), { cause: err })
   }
   return getRelics(userId)
 }
@@ -206,7 +209,12 @@ export async function updateRelic(userId, id, patch) {
   if ('tags' in patch) { sets.push(`tags=$${i++}`); vals.push(JSON.stringify(patch.tags)) }
   let newCoverPath = null
   if ('coverImage' in patch) {
-    newCoverPath = await persistCoverImage(id, patch.coverImage)
+    try {
+      newCoverPath = await persistCoverImage(id, patch.coverImage)
+    } catch (err) {
+      console.error('[relicStorage] updateRelic could not write the cover:', err)
+      throw new Error(i18n.t('relics.errors.updateFailed'), { cause: err })
+    }
     sets.push(`cover_image_path=$${i++}`); vals.push(newCoverPath)
   }
 
@@ -224,7 +232,7 @@ export async function updateRelic(userId, id, patch) {
     } catch (err) {
       console.error('[relicStorage] updateRelic failed:', err)
       await deleteCoverFileIfExists(newCoverPath)
-      throw new Error('Could not update relic. Please try again.', { cause: err })
+      throw new Error(i18n.t('relics.errors.updateFailed'), { cause: err })
     }
     // Replaced files go last, so a failed update never costs the old ones.
     if ('coverImage' in patch) await deleteCoverFileIfExists(existing.cover_image_path)
@@ -250,7 +258,7 @@ export async function deleteRelic(userId, id) {
     await db.execute(`DELETE FROM relics WHERE id=$1 AND user_id=$2`, [id, userId])
   } catch (err) {
     console.error('[relicStorage] deleteRelic failed:', err)
-    throw new Error('Could not delete relic. Please try again.', { cause: err })
+    throw new Error(i18n.t('relics.errors.deleteFailed'), { cause: err })
   }
   // Only once the rows are gone — a failed delete must leave the files alone.
   await deleteCoverFileIfExists(existing.cover_image_path)
