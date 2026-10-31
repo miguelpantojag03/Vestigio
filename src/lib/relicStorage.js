@@ -11,6 +11,7 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { DEMO_RELICS } from '../data/mockRelics.js'
 
 const DEMO_USER_ID = 'user_demo_001'
+const DEMO_SEEDED_FLAG = 'demo_seeded_v1'
 
 function toRow(relic) {
   return {
@@ -81,7 +82,10 @@ async function persistCoverImage(relicId, dataUri) {
   const ext = subtype === 'jpeg' ? 'jpg' : subtype
   const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0))
   const dir = await getCoversDir()
-  const path = `${dir}/${relicId}.${ext}`
+  // Unique per write: covers are always re-encoded to the same format, so a
+  // fixed name would keep the same URL and the UI would go on showing the
+  // previous image after a change.
+  const path = `${dir}/${relicId}_${Date.now()}.${ext}`
   await writeFile(path, bytes)
   return path
 }
@@ -106,9 +110,26 @@ async function insertRelicRow(db, userId, relic, coverImagePath) {
   await recordStatusTransition(db, relic.id, null, 'archived', row.created_at)
 }
 
+// Finds or creates the real project a demo relic belongs to. Without one its
+// project_id stays NULL and it only ever shows up in the global search.
+async function demoProjectId(db, name) {
+  const [existing] = await db.select(
+    `SELECT id FROM projects WHERE user_id=$1 AND name=$2`, [DEMO_USER_ID, name]
+  )
+  if (existing) return existing.id
+  const id = `proj_demo_${Date.now()}`
+  const now = new Date().toISOString()
+  await db.execute(
+    `INSERT INTO projects (id, user_id, name, created_at, updated_at) VALUES ($1,$2,$3,$4,$5)`,
+    [id, DEMO_USER_ID, name, now, now]
+  )
+  return id
+}
+
 async function seedDemoData(db) {
   for (const relic of DEMO_RELICS) {
-    await insertRelicRow(db, DEMO_USER_ID, relic, null)
+    const projectId = await demoProjectId(db, relic.project)
+    await insertRelicRow(db, DEMO_USER_ID, { ...relic, projectId }, null)
     if (relic.revived) {
       await recordStatusTransition(
         db, relic.id, 'archived', 'revived', relic.revivedAt ?? relic.updatedAt
@@ -117,16 +138,37 @@ async function seedDemoData(db) {
   }
 }
 
+async function seedDemoDataOnce() {
+  const db = await getDb()
+  const [flag] = await db.select(`SELECT value FROM migration_meta WHERE key=$1`, [DEMO_SEEDED_FLAG])
+  if (flag) return
+  const [{ n }] = await db.select(`SELECT COUNT(*) AS n FROM relics WHERE user_id=$1`, [DEMO_USER_ID])
+  if (n === 0) await seedDemoData(db)
+  await db.execute(`INSERT OR REPLACE INTO migration_meta (key,value) VALUES ($1,'true')`, [DEMO_SEEDED_FLAG])
+}
+
+let demoSeedPromise = null
+
+/**
+ * Seeds the demo account on its first access only, so deleting every demo
+ * relic doesn't bring them all back. Memoized because useRelics and
+ * useProjects both load at once and would otherwise seed concurrently.
+ */
+export function ensureDemoData(userId) {
+  if (userId !== DEMO_USER_ID) return Promise.resolve()
+  if (!demoSeedPromise) {
+    demoSeedPromise = seedDemoDataOnce().catch(err => { demoSeedPromise = null; throw err })
+  }
+  return demoSeedPromise
+}
+
 export async function getRelics(userId) {
+  await ensureDemoData(userId)
   const db = await getDb()
   const rows = await db.select(
     `SELECT * FROM relics_with_counts WHERE user_id = $1 ORDER BY created_at DESC`,
     [userId]
   )
-  if (rows.length === 0 && userId === DEMO_USER_ID) {
-    await seedDemoData(db)
-    return getRelics(userId)
-  }
   return rows.map(fromRow)
 }
 
@@ -162,10 +204,10 @@ export async function updateRelic(userId, id, patch) {
     if (key in patch) { sets.push(`${col}=$${i++}`); vals.push(patch[key]) }
   }
   if ('tags' in patch) { sets.push(`tags=$${i++}`); vals.push(JSON.stringify(patch.tags)) }
+  let newCoverPath = null
   if ('coverImage' in patch) {
-    await deleteCoverFileIfExists(existing.cover_image_path)
-    const newPath = await persistCoverImage(id, patch.coverImage)
-    sets.push(`cover_image_path=$${i++}`); vals.push(newPath)
+    newCoverPath = await persistCoverImage(id, patch.coverImage)
+    sets.push(`cover_image_path=$${i++}`); vals.push(newCoverPath)
   }
 
   if (sets.length > 0) {
@@ -181,7 +223,13 @@ export async function updateRelic(userId, id, patch) {
       }
     } catch (err) {
       console.error('[relicStorage] updateRelic failed:', err)
+      await deleteCoverFileIfExists(newCoverPath)
       throw new Error('Could not update relic. Please try again.', { cause: err })
+    }
+    // Replaced files go last, so a failed update never costs the old ones.
+    if ('coverImage' in patch) await deleteCoverFileIfExists(existing.cover_image_path)
+    if ('linkedFileCopiedPath' in patch && patch.linkedFileCopiedPath !== existing.linked_file_copied_path) {
+      await deleteCoverFileIfExists(existing.linked_file_copied_path)
     }
   }
   return getRelics(userId)

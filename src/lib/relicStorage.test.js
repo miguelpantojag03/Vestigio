@@ -32,7 +32,8 @@ vi.mock('./db.js', () => ({
   }),
 }))
 
-const { addRelic, deleteRelic } = await import('./relicStorage.js')
+const { addRelic, deleteRelic, updateRelic, getRelics } = await import('./relicStorage.js')
+const { getProjects } = await import('./projectStorage.js')
 
 const USER = 'user_1'
 
@@ -65,6 +66,96 @@ beforeEach(() => {
 describe('attachments schema', () => {
   it('accepts an attachment staged before its relic exists', () => {
     expect(() => addAttachmentRow('relic_not_saved_yet', '/data/attachments/x/a.pdf')).not.toThrow()
+  })
+})
+
+const COVER = 'data:image/jpeg;base64,AAAA'
+
+describe('updateRelic cover and linked copy', () => {
+  it('gives a replaced cover a new URL and removes the old file', async () => {
+    const [before] = await addRelic(USER, makeRelic('r1', { coverImage: COVER }))
+    const oldPath = [...files.keys()][0]
+    await new Promise(r => setTimeout(r, 2))
+
+    const [after] = await updateRelic(USER, 'r1', { coverImage: COVER })
+
+    expect(after.coverImage).not.toBe(before.coverImage)
+    expect(files.has(oldPath)).toBe(false)
+    expect(files.size).toBe(1)
+  })
+
+  it('removes the file when the cover is cleared', async () => {
+    await addRelic(USER, makeRelic('r1', { coverImage: COVER }))
+
+    const [after] = await updateRelic(USER, 'r1', { coverImage: null })
+
+    expect(after.coverImage).toBeNull()
+    expect(files.size).toBe(0)
+  })
+
+  it('keeps the old cover when the update fails', async () => {
+    await addRelic(USER, makeRelic('r1', { coverImage: COVER }))
+    const oldPath = [...files.keys()][0]
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    sqlite.exec(`CREATE TRIGGER no_update BEFORE UPDATE ON relics BEGIN SELECT RAISE(ABORT, 'nope'); END`)
+
+    await expect(updateRelic(USER, 'r1', { coverImage: COVER })).rejects.toThrow()
+
+    expect([...files.keys()]).toEqual([oldPath])
+  })
+
+  it('removes a secured copy once the relic stops pointing at it', async () => {
+    await addRelic(USER, makeRelic('r1', { linkedFileCopiedPath: '/data/linked_copies/r1.pdf' }))
+    files.set('/data/linked_copies/r1.pdf', new Uint8Array([1]))
+
+    await updateRelic(USER, 'r1', { title: 'renamed' })
+    expect(files.size).toBe(1)
+
+    await updateRelic(USER, 'r1', { linkedFileCopiedPath: null })
+    expect(files.size).toBe(0)
+  })
+})
+
+describe('demo account seed', () => {
+  // ensureDemoData memoizes per module instance, so each test gets a fresh one.
+  async function freshModules() {
+    vi.resetModules()
+    return {
+      relics: await import('./relicStorage.js'),
+      projects: await import('./projectStorage.js'),
+    }
+  }
+  const DEMO = 'user_demo_001'
+
+  it('puts demo relics in a real project, visible to the project-scoped gallery', async () => {
+    const { projects, relics } = await freshModules()
+    const list = await projects.getProjects(DEMO)
+    const seeded = await relics.getRelics(DEMO)
+
+    expect(list.map(p => p.name)).toEqual(['Nebula System'])
+    expect(seeded).toHaveLength(5)
+    expect(seeded.every(r => r.projectId === list[0].id)).toBe(true)
+  })
+
+  it('survives both hooks loading at the same time', async () => {
+    const { projects, relics } = await freshModules()
+    const [list, seeded] = await Promise.all([projects.getProjects(DEMO), relics.getRelics(DEMO)])
+
+    expect(list).toHaveLength(1)
+    expect(seeded).toHaveLength(5)
+  })
+
+  it('does not bring the relics back once they have all been deleted', async () => {
+    const { relics } = await freshModules()
+    for (const r of await relics.getRelics(DEMO)) await relics.deleteRelic(DEMO, r.id)
+
+    const { relics: afterRestart } = await freshModules()
+    expect(await afterRestart.getRelics(DEMO)).toEqual([])
+  })
+
+  it('leaves ordinary accounts empty', async () => {
+    expect(await getRelics(USER)).toEqual([])
+    expect(await getProjects(USER)).toEqual([])
   })
 })
 

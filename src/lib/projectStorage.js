@@ -4,6 +4,7 @@
 // "sin proyecto" (project_id = NULL) instead, visible in global search.
 
 import { getDb } from './db.js'
+import { ensureDemoData } from './relicStorage.js'
 
 function makeId() {
   return `proj_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
@@ -20,6 +21,7 @@ function fromRow(row) {
 
 /** @returns {Promise<Project[]>} ordered by most recently updated first */
 export async function getProjects(userId) {
+  await ensureDemoData(userId) // the demo account's projects come from its seed
   const db = await getDb()
   const rows = await db.select(
     `SELECT * FROM projects WHERE user_id = $1 ORDER BY updated_at DESC`,
