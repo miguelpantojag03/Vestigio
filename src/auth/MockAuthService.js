@@ -109,6 +109,12 @@ const MockAuthService = {
     return user
   },
 
+  async accountExists(email) {
+    await _demoInit
+    const users = storageGetLocal(USERS_KEY) || {}
+    return Boolean(users[email.toLowerCase()])
+  },
+
   // profile comes from googleOAuth.js's getGoogleProfile() — Google only
   // confirms identity here, this just finds-or-creates the matching local
   // account exactly like any password account, keyed by the same email.
@@ -117,8 +123,7 @@ const MockAuthService = {
     const users = storageGetLocal(USERS_KEY) || {}
     const key   = profile.email.toLowerCase()
     let record  = users[key]
-    const isNew = !record
-    if (isNew) {
+    if (!record) {
       record = {
         id:                    `user_google_${profile.sub}`,
         email:                 key,
@@ -138,7 +143,7 @@ const MockAuthService = {
     const session = makeSession(user, true) // persistent — no "remember me" concept in OAuth
     localStorage.setItem(SESSION_KEY, JSON.stringify(session))
     notifyListeners(session)
-    return { ...session, isNew }
+    return session
   },
 
   async signOut() {

@@ -180,11 +180,12 @@ describe('exportUsers / importUsers', () => {
 })
 
 describe('signInWithGoogle', () => {
-  it('flags only the first sign-in as new, so only that one goes to onboarding', async () => {
+  it('accountExists tells a first sign-in apart, so only that one goes to onboarding', async () => {
     const svc = await freshService()
-    const profile = { email: 'new@example.com', name: 'New User', sub: 'n1' }
-    expect((await svc.signInWithGoogle(profile)).isNew).toBe(true)
-    expect((await svc.signInWithGoogle(profile)).isNew).toBe(false)
+    const profile = { email: 'New@example.com', name: 'New User', sub: 'n1' }
+    expect(await svc.accountExists(profile.email)).toBe(false)
+    await svc.signInWithGoogle(profile)
+    expect(await svc.accountExists(profile.email)).toBe(true)
   })
 
   it('creates a local account on first sign-in', async () => {

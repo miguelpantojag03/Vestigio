@@ -16,8 +16,8 @@ export function ProtectedRoute({ children }) {
 
 // Prevents authenticated users from visiting /login, /register, etc.
 export function GuestRoute({ children }) {
-  const { status } = useAuth()
+  const { status, postAuthPath } = useAuth()
   if (status === 'loading') return <LoadingScreen />
-  if (status === 'authenticated') return <Navigate to="/app" replace />
+  if (status === 'authenticated') return <Navigate to={postAuthPath ?? '/app'} replace />
   return children
 }

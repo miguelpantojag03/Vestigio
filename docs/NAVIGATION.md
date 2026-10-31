@@ -13,7 +13,7 @@
 | `/app` | `Dashboard.jsx` | `<ProtectedRoute>` | Dashboard principal |
 | `/*` | — | — | Redirige a `/login` |
 
-> *`/onboarding` es pública para que funcione tras el registro, antes de que exista sesión. Solo se accede via `navigate('/onboarding', { state })` desde Register, o desde Login tras el primer acceso con Google.
+> *`/onboarding` es pública para que funcione tras el registro, antes de que exista sesión. Se llega desde `GuestRoute`, que redirige a `postAuthPath` de `AuthProvider` (o a `/app` si no hay): Register y el primer acceso con Google lo fijan antes de que cambie la sesión, porque en cuanto cambia `GuestRoute` redirige y un `navigate()` desde la página pierde esa carrera.
 
 ---
 

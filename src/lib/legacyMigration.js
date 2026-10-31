@@ -84,6 +84,9 @@ async function migrateAttachmentsFromIndexedDb(db) {
     return
   }
 
+  // A fresh install has no legacy data: openDB just created an empty database.
+  if (!idb.objectStoreNames.contains(IDB_STORE)) return
+
   const attachments = await idb.getAll(IDB_STORE)
   for (const a of attachments) {
     try {

@@ -10,6 +10,10 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user,   setUser]   = useState(null)
   const [status, setStatus] = useState('loading') // 'loading'|'authenticated'|'unauthenticated'
+  // Where GuestRoute sends this sign-in, instead of the default /app. It has
+  // to be decided here, before the session changes: the moment it does,
+  // GuestRoute redirects, and a navigate() from the page itself loses that race.
+  const [postAuthPath, setPostAuthPath] = useState(null)
   const timerRef            = useRef(null)
 
   // Schedule automatic sign-out when the session expires
@@ -26,6 +30,7 @@ export function AuthProvider({ children }) {
 
   const doSignOut = useCallback(async () => {
     clearTimeout(timerRef.current)
+    setPostAuthPath(null)
     await authService.signOut()
   }, [])
 
@@ -62,14 +67,19 @@ export function AuthProvider({ children }) {
     return () => { unsub(); clearTimeout(timerRef.current) }
   }, [doSignOut])
 
-  const signIn = useCallback((email, password, remember) =>
-    authService.signIn(email, password, remember), [])
+  const signIn = useCallback((email, password, remember, nextPath = null) => {
+    setPostAuthPath(nextPath)
+    return authService.signIn(email, password, remember)
+  }, [])
 
   const signUp = useCallback((email, password, fullName) =>
     authService.signUp(email, password, fullName), [])
 
   const signInWithGoogle = useCallback(async () => {
     const profile = await getGoogleProfile()
+    // A brand-new account takes the same first-run path as a registration.
+    const exists = await authService.accountExists(profile.email)
+    setPostAuthPath(exists ? null : '/onboarding')
     return authService.signInWithGoogle(profile)
   }, [])
 
@@ -82,7 +92,7 @@ export function AuthProvider({ children }) {
   }, [user])
 
   return (
-    <AuthContext.Provider value={{ user, status, signIn, signUp, signInWithGoogle, signOut, resetPassword, setActiveProject }}>
+    <AuthContext.Provider value={{ user, status, postAuthPath, signIn, signUp, signInWithGoogle, signOut, resetPassword, setActiveProject }}>
       {children}
     </AuthContext.Provider>
   )

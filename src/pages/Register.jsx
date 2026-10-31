@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout.jsx'
 import {
   Field, Input, PasswordInput, PrimaryButton, GlobalError,
@@ -44,7 +44,6 @@ export default function Register() {
   const { color, font } = useTheme()
   const { signUp, signIn }    = useAuth()
   const { push }              = useToast()
-  const navigate              = useNavigate()
   const [globalError, setGlobalError] = useState('')
   const [loading, setLoading]         = useState(false)
 
@@ -61,12 +60,10 @@ export default function Register() {
     setLoading(true)
     try {
       // 1. Create account
-      const user = await signUp(data.email, data.password, data.fullName)
-      // 2. Sign in immediately — no password travels through navigation state
-      await signIn(data.email, data.password, true)
+      await signUp(data.email, data.password, data.fullName)
+      // 2. Sign in immediately; GuestRoute then takes the new account to onboarding
+      await signIn(data.email, data.password, true, '/onboarding')
       push(t('auth.register.successToast'), 'success')
-      // 3. Pass only the non-sensitive userId to onboarding
-      navigate('/onboarding', { state: { userId: user.id } })
     } catch (err) {
       setGlobalError(
         err.message === 'An account with this email already exists.'
