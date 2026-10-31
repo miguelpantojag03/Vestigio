@@ -2,7 +2,7 @@
 // Creates a new relic with cover image, tags + attachments.
 // Tmp-relic pattern: attachments are staged under a temp id, then the
 // id is reused when the relic is saved.  On CANCEL the orphan
-// attachments are cleaned up from IndexedDB.
+// attachments are cleaned up (row + file on disk).
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { X }                         from 'lucide-react'
@@ -229,6 +229,12 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
     try { await addFiles(files) } catch (err) { setAttError(err.message) }
   }
 
+  // AttachmentItem hands back the whole attachment, removeAtt takes its id.
+  // removeAtt already surfaces a failure through useAttachments' error state.
+  function handleDeleteAtt(att) {
+    removeAtt(att.id).catch(() => {})
+  }
+
   async function handleSave() {
     if (!title.trim()) { setTitleError(t('modals.newRelic.titleRequired')); return }
     setSaving(true)
@@ -362,7 +368,7 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
         <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
           <AttachmentList
             attachments={attachments} loading={attLoading} error={attError}
-            onAddFiles={handleAddFiles} onDelete={removeAtt}
+            onAddFiles={handleAddFiles} onDelete={handleDeleteAtt}
             onDownload={downloadAtt} getPreviewURL={getPreviewURL}/>
         </div>
       </div>

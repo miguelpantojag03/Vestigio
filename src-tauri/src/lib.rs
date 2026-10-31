@@ -54,6 +54,12 @@ pub fn run() {
       sql: include_str!("../migrations/0008_remove_lineage.sql"),
       kind: MigrationKind::Up,
     },
+    Migration {
+      version: 9,
+      description: "attachments_no_relic_fk",
+      sql: include_str!("../migrations/0009_attachments_no_relic_fk.sql"),
+      kind: MigrationKind::Up,
+    },
   ];
 
   tauri::Builder::default()
