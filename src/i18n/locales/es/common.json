@@ -178,6 +178,14 @@
       "deleted": "La papelera está vacía."
     },
     "emptyTrash": "Vaciar papelera",
+    "bulk": {
+      "select": "Seleccionar",
+      "selectAll": "Seleccionar todas",
+      "count_one": "{{count}} seleccionada",
+      "count_other": "{{count}} seleccionadas",
+      "moveTo": "Mover a proyecto…",
+      "addTag": "Añadir etiqueta…"
+    },
     "toast": {
       "revived": "¡Reliquia revivida! 🎉",
       "relicAdded": "Reliquia añadida al archivo.",
@@ -193,6 +201,10 @@
       "emptyTrashTitle": "¿Vaciar la papelera?",
       "emptyTrashConfirm": "Vaciar papelera",
       "trashEmptied": "Papelera vaciada.",
+      "moved_one": "Reliquia movida a «{{project}}».",
+      "moved_other": "{{count}} reliquias movidas a «{{project}}».",
+      "tagged_one": "Etiqueta añadida a la reliquia.",
+      "tagged_other": "Etiqueta añadida a {{count}} reliquias.",
       "deleteMessage": "«{{title}}» y todos sus archivos adjuntos se eliminarán para siempre.",
       "deleteConfirmLabel": "Eliminar para siempre",
       "deletedForever_one": "Reliquia eliminada para siempre.",

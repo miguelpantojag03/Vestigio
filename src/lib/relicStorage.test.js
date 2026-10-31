@@ -32,7 +32,7 @@ vi.mock('./db.js', () => ({
   }),
 }))
 
-const { addRelic, deleteRelics, trashRelics, restoreRelics, emptyTrash, updateRelic, getRelics } = await import('./relicStorage.js')
+const { addRelic, deleteRelics, trashRelics, restoreRelics, emptyTrash, updateRelic, getRelics, moveRelicsToProject, addTagToRelics } = await import('./relicStorage.js')
 const { getProjects } = await import('./projectStorage.js')
 
 const USER = 'user_1'
@@ -171,6 +171,35 @@ describe('cause of death', () => {
 
     const list = await addRelic(USER, makeRelic('r2'))
     expect(list.find(r => r.id === 'r2').deathCause).toBeNull()
+  })
+})
+
+describe('bulk actions', () => {
+  it('moves only the given relics, and only this user\'s', async () => {
+    await addRelic(USER, makeRelic('r1'))
+    await addRelic(USER, makeRelic('r2'))
+    await addRelic('someone_else', makeRelic('theirs'))
+
+    const list = await moveRelicsToProject(USER, ['r1', 'theirs'], { id: 'p1', name: 'Project One' })
+
+    const r1 = list.find(r => r.id === 'r1')
+    expect(r1.projectId).toBe('p1')
+    expect(r1.project).toBe('Project One')
+    expect(list.find(r => r.id === 'r2').projectId).toBeNull()
+    expect((await getRelics('someone_else'))[0].projectId).toBeNull()
+  })
+
+  it('adds a normalized tag without duplicating it or passing the limit', async () => {
+    const full = Array.from({ length: 10 }, (_, i) => `t${i}`)
+    await addRelic(USER, makeRelic('plain', { tags: ['old'] }))
+    await addRelic(USER, makeRelic('has_it', { tags: ['brand'] }))
+    await addRelic(USER, makeRelic('full', { tags: full }))
+
+    const list = await addTagToRelics(USER, ['plain', 'has_it', 'full'], '  Brand ')
+
+    expect(list.find(r => r.id === 'plain').tags).toEqual(['old', 'brand'])
+    expect(list.find(r => r.id === 'has_it').tags).toEqual(['brand'])
+    expect(list.find(r => r.id === 'full').tags).toEqual(full)
   })
 })
 

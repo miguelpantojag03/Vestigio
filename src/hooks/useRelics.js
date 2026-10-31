@@ -2,7 +2,7 @@
 // All relic state: CRUD, filtering, searching, sorting, section nav.
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getRelics, addRelic, updateRelic, trashRelics, restoreRelics, deleteRelics, emptyTrash as emptyTrashStorage } from '../lib/relicStorage.js'
+import { getRelics, addRelic, updateRelic, trashRelics, restoreRelics, deleteRelics, emptyTrash as emptyTrashStorage, moveRelicsToProject, addTagToRelics } from '../lib/relicStorage.js'
 
 // sort helpers
 function sortFn(field, dir) {
@@ -158,6 +158,16 @@ export function useRelics(userId, currentProjectId) {
     return updated
   }, [userId])
 
+  const moveToProject = useCallback(async (ids, project) => {
+    if (!userId) return
+    setRelics(await moveRelicsToProject(userId, ids, project))
+  }, [userId])
+
+  const addTag = useCallback(async (ids, tag) => {
+    if (!userId) return
+    setRelics(await addTagToRelics(userId, ids, tag))
+  }, [userId])
+
   const trash = useCallback(async (ids) => {
     if (!userId) return
     setRelics(await trashRelics(userId, ids))
@@ -196,6 +206,6 @@ export function useRelics(userId, currentProjectId) {
     searchDateTo,   setSearchDateTo,
     sortField, sortDir, cycleSort,
     loading, stats,
-    add, update, revive, trash, restore, removeForever, emptyTrash,
+    add, update, revive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
   }
 }

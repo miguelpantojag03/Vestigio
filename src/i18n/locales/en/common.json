@@ -178,6 +178,14 @@
       "deleted": "The trash is empty."
     },
     "emptyTrash": "Empty trash",
+    "bulk": {
+      "select": "Select",
+      "selectAll": "Select all",
+      "count_one": "{{count}} selected",
+      "count_other": "{{count}} selected",
+      "moveTo": "Move to project…",
+      "addTag": "Add a tag…"
+    },
     "toast": {
       "revived": "Relic revived! 🎉",
       "relicAdded": "Relic added to the archive.",
@@ -193,6 +201,10 @@
       "emptyTrashTitle": "Empty the trash?",
       "emptyTrashConfirm": "Empty trash",
       "trashEmptied": "Trash emptied.",
+      "moved_one": "Relic moved to \"{{project}}\".",
+      "moved_other": "{{count}} relics moved to \"{{project}}\".",
+      "tagged_one": "Tag added to the relic.",
+      "tagged_other": "Tag added to {{count}} relics.",
       "deleteMessage": "\"{{title}}\" and all its attachments will be permanently removed.",
       "deleteConfirmLabel": "Delete Forever",
       "deletedForever_one": "Relic deleted forever.",

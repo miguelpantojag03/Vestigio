@@ -250,6 +250,47 @@ export async function updateRelic(userId, id, patch) {
   return getRelics(userId)
 }
 
+export async function moveRelicsToProject(userId, ids, project) {
+  const db = await getDb()
+  const now = new Date().toISOString()
+  try {
+    for (const id of ids) {
+      await db.execute(
+        `UPDATE relics SET project_id=$1, project=$2, updated_at=$3 WHERE id=$4 AND user_id=$5`,
+        [project.id, project.name, now, id, userId]
+      )
+    }
+  } catch (err) {
+    console.error('[relicStorage] moveRelicsToProject failed:', err)
+    throw new Error(i18n.t('relics.errors.updateFailed'), { cause: err })
+  }
+  return getRelics(userId)
+}
+
+const MAX_TAGS = 10 // same limit as TagsInput
+
+export async function addTagToRelics(userId, ids, rawTag) {
+  const tag = rawTag.trim().toLowerCase()
+  const db = await getDb()
+  const now = new Date().toISOString()
+  try {
+    for (const id of ids) {
+      const [row] = await db.select(`SELECT tags FROM relics WHERE id=$1 AND user_id=$2`, [id, userId])
+      if (!row) continue
+      const tags = JSON.parse(row.tags || '[]')
+      if (tags.includes(tag) || tags.length >= MAX_TAGS) continue
+      await db.execute(
+        `UPDATE relics SET tags=$1, updated_at=$2 WHERE id=$3 AND user_id=$4`,
+        [JSON.stringify([...tags, tag]), now, id, userId]
+      )
+    }
+  } catch (err) {
+    console.error('[relicStorage] addTagToRelics failed:', err)
+    throw new Error(i18n.t('relics.errors.updateFailed'), { cause: err })
+  }
+  return getRelics(userId)
+}
+
 /** Moves relics to the trash. Rows and files stay, so this can be undone. */
 export async function trashRelics(userId, ids) {
   return setDeletedAt(userId, ids, new Date().toISOString())

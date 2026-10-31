@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence }  from 'framer-motion'
 import { useNavigate }     from 'react-router-dom'
 import { useTranslation }  from 'react-i18next'
-import { Archive, RotateCcw, Layers, Trash2 } from 'lucide-react'
+import { Archive, RotateCcw, Layers, Trash2, CheckSquare } from 'lucide-react'
 import { useAuth }         from '../auth/AuthProvider.jsx'
 import { useToast }        from '../components/Toast.jsx'
 import { useRelics }       from '../hooks/useRelics.js'
@@ -17,6 +17,7 @@ import RevivalZone         from '../components/RevivalZone.jsx'
 import NewRelicModal       from '../components/NewRelicModal.jsx'
 import EditRelicModal      from '../components/EditRelicModal.jsx'
 import AIInsightsPanel     from '../components/AIInsightsPanel.jsx'
+import BulkActionBar       from '../components/BulkActionBar.jsx'
 import SettingsModal       from '../components/SettingsModal.jsx'
 import { useTheme }        from '../context/ThemeContext.jsx'
 
@@ -87,7 +88,7 @@ export default function Dashboard() {
     searchCategory, setSearchCategory, searchStatus, setSearchStatus,
     searchCause, setSearchCause,
     searchDateFrom, setSearchDateFrom, searchDateTo, setSearchDateTo,
-    stats, add, update, revive, trash, restore, removeForever, emptyTrash,
+    stats, add, update, revive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
   } = useRelics(user?.id, currentProjectId)
 
   const hasSearchActivity = section === 'search'
@@ -101,7 +102,27 @@ export default function Dashboard() {
   const [showSettings,  setShowSettings]  = useState(false)
   const [aiAnalysis,    setAiAnalysis]    = useState({})  // { [relicId]: string }
   const [aiLoadingId,   setAiLoadingId]   = useState(null)
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [checkedIds,    setCheckedIds]    = useState(() => new Set())
   const revivalZoneRef                    = useRef(null)
+
+  // Only what's on screen: a filter or section change must never let a bulk
+  // action reach relics the user can no longer see are selected.
+  const bulkIds = visible.filter(r => checkedIds.has(r.id)).map(r => r.id)
+
+  function toggleChecked(id) {
+    setCheckedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function exitSelection() {
+    setSelectionMode(false)
+    setCheckedIds(new Set())
+  }
 
   // Session expiry — AuthProvider has already signed out by the time this
   // event fires; this handler only reacts to it (toast + redirect).
@@ -186,6 +207,28 @@ export default function Dashboard() {
     try {
       await removeForever(ids)
       push(t('dashboard.toast.deletedForever', { count: ids.length }), 'info')
+      exitSelection()
+    } catch (err) {
+      push(err.message, 'error')
+    }
+  }
+
+  async function handleBulkMove(projectId) {
+    const project = projects.find(p => p.id === projectId)
+    if (!project) return
+    try {
+      await moveToProject(bulkIds, project)
+      push(t('dashboard.toast.moved', { count: bulkIds.length, project: project.name }), 'success')
+      exitSelection()
+    } catch (err) {
+      push(err.message, 'error')
+    }
+  }
+
+  async function handleBulkTag(tag) {
+    try {
+      await addTag(bulkIds, tag)
+      push(t('dashboard.toast.tagged', { count: bulkIds.length }), 'success')
     } catch (err) {
       push(err.message, 'error')
     }
@@ -244,6 +287,8 @@ export default function Dashboard() {
     setSelectedId(id)
   }
 
+  const headerButton = {display:'flex',alignItems:'center',gap:6,padding:'7px 12px',borderRadius:radius.control,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.textSecondary,fontSize:12,fontWeight:600,fontFamily:font.ui,cursor:'pointer'}
+
   return (
     <div style={{display:'flex',flexDirection:'column',height:'100vh',background:color.bgBase,overflow:'hidden'}}>
       <ConfirmModalUI/>
@@ -296,15 +341,28 @@ export default function Dashboard() {
 
               {section === 'deleted' ? (
                 trashed.length > 0 && (
-                  <button onClick={handleEmptyTrash}
-                    style={{display:'flex',alignItems:'center',gap:6,margin:'12px 0 16px',padding:'7px 12px',borderRadius:radius.control,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.terracotta500,fontSize:12,fontWeight:600,fontFamily:font.ui,cursor:'pointer'}}>
-                    <Trash2 size={13}/> {t('dashboard.emptyTrash')}
-                  </button>
+                  <div style={{display:'flex',gap:8,margin:'12px 0 16px'}}>
+                    {!selectionMode && (
+                      <button onClick={() => setSelectionMode(true)} style={headerButton}>
+                        <CheckSquare size={13}/> {t('dashboard.bulk.select')}
+                      </button>
+                    )}
+                    <button onClick={handleEmptyTrash} style={{...headerButton,color:color.terracotta500}}>
+                      <Trash2 size={13}/> {t('dashboard.emptyTrash')}
+                    </button>
+                  </div>
                 )
               ) : (
                 <>
                   {/* Stats */}
-                  <StatsBar stats={stats}/>
+                  <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+                    <StatsBar stats={stats}/>
+                    {!selectionMode && visible.length > 0 && (
+                      <button onClick={() => setSelectionMode(true)} style={{...headerButton,marginTop:4}}>
+                        <CheckSquare size={13}/> {t('dashboard.bulk.select')}
+                      </button>
+                    )}
+                  </div>
 
                   {/* AI Insights */}
                   <div style={{marginBottom:20}}>
@@ -327,8 +385,9 @@ export default function Dashboard() {
                     {visible.map((r,i)=>(
                       <RelicCard
                         key={r.id} relic={r} animIndex={i}
-                        isSelected={r.id===selected?.id}
-                        onSelect={setSelectedId}
+                        selectionMode={selectionMode}
+                        isSelected={selectionMode ? checkedIds.has(r.id) : r.id===selected?.id}
+                        onSelect={selectionMode ? toggleChecked : setSelectedId}
                         onCardDrag={handleCardDrag}
                         onCardDragEnd={handleCardDragEnd}
                       />
@@ -336,9 +395,24 @@ export default function Dashboard() {
                   </AnimatePresence>
                 </div>
               )}
+
+              {selectionMode && (
+                <BulkActionBar
+                  count={bulkIds.length}
+                  inTrash={section === 'deleted'}
+                  projects={projects}
+                  onSelectAll={() => setCheckedIds(new Set(visible.map(r => r.id)))}
+                  onCancel={exitSelection}
+                  onMove={handleBulkMove}
+                  onAddTag={handleBulkTag}
+                  onTrash={() => { handleTrash(bulkIds); exitSelection() }}
+                  onRestore={() => { handleRestore(bulkIds); exitSelection() }}
+                  onDeleteForever={() => handleDeleteForever(bulkIds)}
+                />
+              )}
             </div>
 
-            {section !== 'deleted' && (
+            {section !== 'deleted' && !selectionMode && (
               <RevivalZone
                 ref={revivalZoneRef}
                 isDragOver={dragOver}

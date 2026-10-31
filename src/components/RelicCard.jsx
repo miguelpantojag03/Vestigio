@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { RotateCcw, PenLine, FileText, Palette, Tag, StickyNote, Paperclip, Link2, Layers } from 'lucide-react'
+import { RotateCcw, PenLine, FileText, Palette, Tag, StickyNote, Paperclip, Link2, Layers, Check } from 'lucide-react'
 import { getThumbnail } from './Thumbnails.jsx'
 import { countAttachments } from '../lib/attachmentStorage.js'
 import { countOpenDrafts } from '../lib/draftStorage.js'
@@ -22,7 +22,7 @@ function CategoryIcon({ cat }) {
   }
 }
 
-export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onCardDragEnd, animIndex = 0 }) {
+export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onCardDragEnd, animIndex = 0, selectionMode = false }) {
   const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
   const [attCount, setAttCount] = useState(0)
@@ -51,7 +51,7 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
 
   return (
     <motion.div
-      drag={!relic.deletedAt}
+      drag={!relic.deletedAt && !selectionMode}
       dragSnapToOrigin
       dragElastic={0.12}
       dragMomentum={false}
@@ -84,6 +84,18 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
       {/* Thumbnail */}
       <div style={{height:100,borderRadius:radius.chip+2,overflow:'hidden',position:'relative',marginBottom:9}}>
         {getThumbnail(relic.thumbnail, relic.coverImage)}
+
+        {/* Bulk selection checkbox */}
+        {selectionMode && (
+          <div aria-hidden style={{
+            position:'absolute',bottom:5,left:5,width:18,height:18,borderRadius:radius.chipSm,
+            display:'flex',alignItems:'center',justifyContent:'center',
+            background:isSelected?color.blue500:'rgba(0,0,0,0.55)',
+            border:`1.5px solid ${isSelected?color.blue500:'rgba(255,255,255,0.7)'}`,
+          }}>
+            {isSelected && <Check size={12} strokeWidth={3} style={{color:color.onPrimary}}/>}
+          </div>
+        )}
 
         {/* Attachment count badge */}
         {attCount > 0 && (
