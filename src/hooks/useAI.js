@@ -43,8 +43,12 @@ export function useAI() {
       setError(msg)
       return null
     } finally {
-      setLoading(false)
-      abortRef.current = null
+      // A newer call may have aborted this one and taken over: leave its
+      // loading state and its abort handle alone.
+      if (abortRef.current === ctrl) {
+        setLoading(false)
+        abortRef.current = null
+      }
     }
   }, [i18n.language, t])
 

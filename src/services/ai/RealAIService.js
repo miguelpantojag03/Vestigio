@@ -34,10 +34,32 @@ async function callAI(systemPrompt, userMessage, signal) {
   }
 
   const data   = await res.json()
-  const text   = data.content?.[0]?.text ?? ''
-  // Strip any accidental markdown fences the model might add
-  const clean  = text.replace(/^```(?:json)?\n?/,'').replace(/\n?```$/,'').trim()
-  return JSON.parse(clean)
+  return parseModelJson(data.content?.[0]?.text ?? '')
+}
+
+// The model is asked for bare JSON but doesn't reliably comply: it may wrap
+// it in markdown fences or add a sentence around it.
+export function parseModelJson(text) {
+  const clean = text.replace(/^\s*```(?:json)?\s*/, '').replace(/\s*```\s*$/, '').trim()
+  try {
+    return JSON.parse(clean)
+  } catch (err) {
+    const start = clean.indexOf('{')
+    const end   = clean.lastIndexOf('}')
+    if (start === -1 || end <= start) throw err
+    return JSON.parse(clean.slice(start, end + 1))
+  }
+}
+
+// Nor does valid JSON guarantee the promised shape, and the UI renders these
+// values directly: a string where a list belongs, or an object where text
+// belongs, would crash the whole app through the ErrorBoundary.
+function asText(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function asTextList(value) {
+  return Array.isArray(value) ? value.map(asText).filter(Boolean) : []
 }
 
 // ── System prompt shared by all features ──────────────────────────
@@ -56,26 +78,28 @@ function systemPrompt(lang) {
 function makeRealAIService() {
   return {
     async suggestTags(title, description, category = 'NOTES', lang, signal) {
-      return callAI(systemPrompt(lang),
+      const result = await callAI(systemPrompt(lang),
         `Suggest 3 to 5 lowercase tags for this archived creative relic.
 Title: "${title}"
 Description: "${description}"
 Category: ${category}
 Return JSON: { "tags": ["tag1","tag2","tag3"] }`,
         signal)
+      return { tags: asTextList(result?.tags).map(tag => tag.toLowerCase()) }
     },
 
     async enhanceDescription(title, description, lang, signal) {
-      return callAI(systemPrompt(lang),
+      const result = await callAI(systemPrompt(lang),
         `Improve this description for an archived creative relic. Keep it under 200 characters. Be specific about why it was discarded and what value it retains.
 Title: "${title}"
 Current description: "${description || 'No description yet.'}"
 Return JSON: { "description": "improved text here" }`,
         signal)
+      return { description: asText(result?.description) }
     },
 
     async analyzeRelic(relic, lang, signal) {
-      return callAI(systemPrompt(lang),
+      const result = await callAI(systemPrompt(lang),
         `Analyze this discarded creative relic and assess its revival potential.
 Title: "${relic.title}"
 Category: ${relic.category}
@@ -88,6 +112,11 @@ Return JSON: {
   "suggestions": ["action 1", "action 2"]
 }`,
         signal)
+      return {
+        summary:     asText(result?.summary),
+        potential:   asText(result?.potential),
+        suggestions: asTextList(result?.suggestions),
+      }
     },
 
     async archiveInsights(relics, lang, signal) {
@@ -97,7 +126,7 @@ Return JSON: {
         description: r.description?.slice(0, 80),
         revived: r.revived, discardedAt: r.discardedAt,
       }))
-      return callAI(systemPrompt(lang),
+      const result = await callAI(systemPrompt(lang),
         `Analyze this team's creative archive and provide insights.
 Archive (${relics.length} relics): ${JSON.stringify(summaries)}
 Return JSON: {
@@ -107,6 +136,12 @@ Return JSON: {
   "tip": "one actionable creative tip based on these patterns"
 }`,
         signal)
+      return {
+        overview:             asText(result?.overview),
+        patterns:             asTextList(result?.patterns),
+        topRevivalCandidates: asTextList(result?.topRevivalCandidates),
+        tip:                  asText(result?.tip),
+      }
     },
   }
 }

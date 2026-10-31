@@ -72,7 +72,7 @@ export default function Dashboard() {
   const { push }           = useToast()
   const navigate           = useNavigate()
   const { confirm, ConfirmModalUI } = useConfirm()
-  const { analyzeRelic }   = useAI()
+  const { analyzeRelic, error: aiError } = useAI()
 
   const {
     projects, currentProject, currentProjectId, switchProject, addProject,
@@ -179,11 +179,16 @@ export default function Dashboard() {
     setAiLoadingId(relic.id)
     const result = await analyzeRelic(relic)
     if (result) {
-      const summary = `${result.summary} ${result.potential} ${result.suggestions?.join(' ')}`.trim()
-      setAiAnalysis(prev => ({ ...prev, [relic.id]: summary }))
+      const summary = [result.summary, result.potential, ...(result.suggestions ?? [])].filter(Boolean).join(' ')
+      if (summary) setAiAnalysis(prev => ({ ...prev, [relic.id]: summary }))
     }
-    setAiLoadingId(null)
+    // Analyzing another relic aborts this call — its spinner isn't ours to clear.
+    setAiLoadingId(current => current === relic.id ? null : current)
   }
+
+  useEffect(() => {
+    if (aiError) push(aiError, 'error')
+  }, [aiError, push])
 
   // Jump to a relic from anywhere that lists the whole archive (AI insights,
   // the déjà-vu warning): it may live in another project, or in none, and
