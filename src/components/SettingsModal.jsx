@@ -156,7 +156,7 @@ export default function SettingsModal({ userId, onClose }) {
 
   return (
     <Modal title={t('modals.settings.title')} onClose={onClose}>
-      <div style={{display:'flex',flexDirection:'column',gap:20}}>
+      <div style={{display:'flex',flexDirection:'column',gap:20,maxHeight:'72vh',overflowY:'auto',paddingRight:2}}>
 
         {/* Language + Theme */}
         <div style={{display:'flex',flexDirection:'column',gap:12}}>
@@ -173,6 +173,18 @@ export default function SettingsModal({ userId, onClose }) {
 
         {/* Export */}
         <ExportSection userId={userId}/>
+
+        <div style={{height:1,background:color.bgBorder}}/>
+
+        {/* Privacy */}
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.1em',color:color.textSecondary,textTransform:'uppercase',marginBottom:4}}>
+            {t('modals.settings.privacyTitle')}
+          </div>
+          {['privacyLocal', 'privacyAI', 'privacyGoogle'].map(key => (
+            <p key={key} style={{fontSize:11,color:color.textSecondary,lineHeight:1.6,margin:0}}>{t(`modals.settings.${key}`)}</p>
+          ))}
+        </div>
       </div>
     </Modal>
   )

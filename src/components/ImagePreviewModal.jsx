@@ -5,12 +5,13 @@
 // • Text    → <pre> scrollable
 // • Others  → should not reach here (AttachmentItem guards)
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, Download, ZoomIn, ZoomOut, RotateCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { isImage, isPDF, isText } from '../constants/fileTypes.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
+import { useFocusTrap } from '../hooks/useFocusTrap.js'
 
 export default function ImagePreviewModal({ attachment, url, onClose, onDownload }) {
   const { t } = useTranslation()
@@ -19,6 +20,8 @@ export default function ImagePreviewModal({ attachment, url, onClose, onDownload
   const [textContent, setTextContent] = useState(null)
   const [zoom,        setZoom]        = useState(1)
   const [rotation,    setRotation]    = useState(0)
+  const dialogRef = useRef(null)
+  useFocusTrap(dialogRef)
 
   // Load text content for txt/md/csv
   useEffect(() => {
@@ -31,9 +34,14 @@ export default function ImagePreviewModal({ attachment, url, onClose, onDownload
 
   // Close on Escape
   useEffect(() => {
-    const handler = e => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
+    // Capture phase: Escape answers the preview, not a modal it opened from
+    const handler = e => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      onClose()
+    }
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
   }, [onClose])
 
   const img = isImage(extension)
@@ -49,6 +57,10 @@ export default function ImagePreviewModal({ attachment, url, onClose, onDownload
 
   return (
     <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={originalName}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
       style={{
         position: 'fixed', inset: 0, zIndex: 300,

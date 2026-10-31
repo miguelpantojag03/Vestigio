@@ -14,6 +14,7 @@ import { useToast }        from './Toast.jsx'
 import { useConfirm }      from './ConfirmModal.jsx'
 import { isImage }         from '../constants/fileTypes.js'
 import { useTheme }        from '../context/ThemeContext.jsx'
+import { useFocusTrap }    from '../hooks/useFocusTrap.js'
 import { alpha }           from '../styles/tokens.js'
 import { formatDate }      from '../lib/formatDate.js'
 import { getLinkStatus, openLinkedFile, openCopiedFile, pickFileToLink, secureCopy, basename } from '../lib/fileLinks.js'
@@ -24,6 +25,8 @@ function ImageViewer({ src, title, onClose }) {
   const { color } = useTheme()
   const [zoom, setZoom] = useState(1)
   const [rot,  setRot]  = useState(0)
+  const dialogRef = useRef(null)
+  useFocusTrap(dialogRef)
 
   useEffect(() => {
     const h = e => { if (e.key === 'Escape') onClose() }
@@ -32,7 +35,7 @@ function ImageViewer({ src, title, onClose }) {
   }, [onClose])
 
   const btn = (label, onClick, danger = false) => (
-    <button onClick={onClick} title={label}
+    <button onClick={onClick} title={label} aria-label={label}
       style={{
         background: 'none', border: 'none', cursor: 'pointer',
         color: danger ? color.terracotta500 : color.textPrimary, padding: 6, borderRadius: 6,
@@ -44,7 +47,8 @@ function ImageViewer({ src, title, onClose }) {
   )
 
   return (
-    <div onClick={e => e.target === e.currentTarget && onClose()}
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={title}
+      onClick={e => e.target === e.currentTarget && onClose()}
       style={{
         position:'fixed',inset:0,zIndex:600,
         background:'rgba(0,0,0,0.9)',backdropFilter:'blur(8px)',
@@ -251,7 +255,7 @@ function LinkedFileSection({ relic, onUpdateRelic, color, font, t, push }) {
 }
 
 /* ─── drafts ───────────────────────────────────────────────────────── */
-function DraftEditor({ draft, onChange, color, font, t }) {
+function DraftEditor({ draft, onChange, onPending, color, font, t }) {
   const [title, setTitle] = useState(draft.title)
   const [description, setDescription] = useState(draft.description)
   const [notes, setNotes] = useState(draft.notes)
@@ -261,9 +265,11 @@ function DraftEditor({ draft, onChange, color, font, t }) {
     const changed = title !== draft.title || description !== draft.description || notes !== draft.notes
     const patch = { title, description, notes }
     pendingRef.current = changed ? patch : null
+    onPending(pendingRef.current)
     if (!changed) return
     const timer = setTimeout(() => {
       pendingRef.current = null
+      onPending(null)
       onChange(patch)
     }, 600)
     return () => clearTimeout(timer)
@@ -294,6 +300,7 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
   const { confirm, ConfirmModalUI } = useConfirm()
   const [expandedId, setExpandedId] = useState(null)
   const [showArchived, setShowArchived] = useState(false)
+  const pendingEdits = useRef({}) // draft id → edits still waiting on the autosave
 
   const open = drafts.filter(d => d.status === 'open')
   const archived = drafts.filter(d => d.status === 'archived')
@@ -343,7 +350,8 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
     return run(() => promote(draft))
   }
 
-  async function promote(draft) {
+  async function promote(saved) {
+    const draft = { ...saved, ...pendingEdits.current[saved.id] }
     const previous = { title: relic.title, description: relic.description, notes: relic.notes }
     await onUpdateRelic(relic.id, { title: draft.title, description: draft.description, notes: draft.notes })
     await archive(draft.id, t('relicDetails.drafts.promotedReason'))
@@ -402,7 +410,7 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
               {expandedId===d.id ? <ChevronUp size={12} style={{color:color.textSecondary}}/> : <ChevronDown size={12} style={{color:color.textSecondary}}/>}
             </div>
             {expandedId === d.id && (
-              <DraftEditor draft={d} onChange={patch => update(d.id, patch)} color={color} font={font} t={t}/>
+              <DraftEditor draft={d} onChange={patch => update(d.id, patch)} onPending={patch => { pendingEdits.current[d.id] = patch }} color={color} font={font} t={t}/>
             )}
           </div>
         ))}

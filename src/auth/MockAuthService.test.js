@@ -73,6 +73,22 @@ describe('signIn', () => {
   })
 })
 
+describe('password hash upgrade', () => {
+  it('replaces an old hash on sign-in, and the password keeps working', async () => {
+    const svc = await freshService()
+    await svc.signUp('old@example.com', 'Password1!', 'Old')
+    const users = JSON.parse(localStorage.getItem(USERS_KEY))
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('AM_SALT_2024::Password1!'))
+    users['old@example.com'].passwordHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+    localStorage.setItem(USERS_KEY, JSON.stringify(users))
+
+    await svc.signIn('old@example.com', 'Password1!')
+
+    expect(JSON.parse(localStorage.getItem(USERS_KEY))['old@example.com'].passwordHash).toMatch(/^pbkdf2\$/)
+    await expect(svc.signIn('old@example.com', 'Password1!')).resolves.toBeTruthy()
+  })
+})
+
 describe('signOut', () => {
   it('clears the session from both stores', async () => {
     const svc = await freshService()

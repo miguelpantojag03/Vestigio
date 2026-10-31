@@ -7,6 +7,10 @@
 // stores nothing, logs nothing beyond Cloudflare's own request logs,
 // and knows nothing about users.
 //
+// The shared secret ships inside the app, so anyone determined can extract it.
+// What actually bounds the damage is below: requests per minute per IP, and
+// how much each request may ask for.
+//
 // Request/response shape is kept the same as the Anthropic Messages
 // API this Worker used to proxy ({ system, messages, max_tokens } in,
 // { content: [{ text }] } out) so the frontend (RealAIService.js)
@@ -14,11 +18,20 @@
 // file needs to change if the model is swapped again later.
 
 const MODEL = '@cf/meta/llama-3.1-8b-instruct-fp8'
+const MAX_TOKENS = 1024
+const MAX_BODY_CHARS = 20000
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, x-app-secret',
+}
+
+function errorResponse(status, message) {
+  return new Response(
+    JSON.stringify({ error: { message } }),
+    { status, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } },
+  )
 }
 
 export default {
@@ -33,15 +46,20 @@ export default {
       return new Response('Forbidden', { status: 403, headers: CORS_HEADERS })
     }
 
+    const ip = request.headers.get('cf-connecting-ip') ?? 'unknown'
+    const { success } = await env.RATE_LIMITER.limit({ key: ip })
+    if (!success) return errorResponse(429, 'Rate limit exceeded')
+
+    const body = await request.text()
+    if (body.length > MAX_BODY_CHARS) return errorResponse(413, 'Request too large')
+
     let payload
     try {
-      payload = await request.json()
+      payload = JSON.parse(body)
     } catch {
-      return new Response(
-        JSON.stringify({ error: { message: 'Invalid JSON body' } }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } },
-      )
+      return errorResponse(400, 'Invalid JSON body')
     }
+    if (!payload || typeof payload !== 'object') return errorResponse(400, 'Invalid JSON body')
 
     const { system, messages, max_tokens } = payload
     const userMessage = messages?.[0]?.content ?? ''
@@ -52,7 +70,7 @@ export default {
           { role: 'system', content: system ?? '' },
           { role: 'user', content: userMessage },
         ],
-        max_tokens: max_tokens ?? 512,
+        max_tokens: Math.min(Number(max_tokens) || 512, MAX_TOKENS),
       })
 
       return new Response(
@@ -60,10 +78,7 @@ export default {
         { status: 200, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } },
       )
     } catch (err) {
-      return new Response(
-        JSON.stringify({ error: { message: String(err?.message ?? err) } }),
-        { status: 502, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } },
-      )
+      return errorResponse(502, String(err?.message ?? err))
     }
   },
 }

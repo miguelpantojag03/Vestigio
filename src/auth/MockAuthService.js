@@ -4,7 +4,7 @@
 //     Replace with a real backend (Supabase, Firebase, custom API)
 //     that handles auth server-side with secure password hashing.
 
-import { hashPassword, verifyPassword, migrateOldHash } from '../lib/hash.js'
+import { hashPassword, verifyPassword, migrateOldHash, needsRehash } from '../lib/hash.js'
 import { storageGetLocal, storageSetLocal }              from '../lib/storage.js'
 import { USERS_KEY, SESSION_KEY }                        from '../constants/storageKeys.js'
 
@@ -75,6 +75,11 @@ const MockAuthService = {
     const record = users[email.toLowerCase()]
     if (!record || !(await verifyPassword(password, record.passwordHash))) {
       throw new Error('Invalid email or password.')
+    }
+    // Signing in is the only moment the password is known: upgrade old hashes here.
+    if (needsRehash(record.passwordHash)) {
+      record.passwordHash = await hashPassword(password)
+      storageSetLocal(USERS_KEY, users)
     }
     const { passwordHash: _, __hashVersion: __, ...user } = record
     const session = makeSession(user, remember)

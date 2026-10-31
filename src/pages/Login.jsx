@@ -162,8 +162,8 @@ export default function Login() {
           {googleLoading ? t('auth.login.googleButtonLoading') : t('auth.login.googleButton')}
         </button>
 
-        {/* Demo account fill */}
-        <button
+        {/* Demo account fill — development only: credentials don't belong on a shipped login screen */}
+        {import.meta.env.DEV && <button
           type="button"
           onClick={fillDemo}
           style={{
@@ -177,7 +177,7 @@ export default function Login() {
           onMouseLeave={e => e.currentTarget.style.background = alpha(color.blue500, 0.08)}
         >
           {t('auth.login.demoButton')}
-        </button>
+        </button>}
 
         {/* Footer */}
         <p style={{ textAlign: 'center', fontSize: 12, color: color.textSecondary, fontFamily: font.ui, marginTop: 4 }}>
