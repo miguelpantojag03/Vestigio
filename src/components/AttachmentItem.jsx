@@ -95,7 +95,7 @@ export default function AttachmentItem({
       <div style={{
         display:    'flex',
         gap:        4,
-        opacity:    hovered ? 1 : 0,
+        opacity:    hovered ? 1 : 0.6, // never fully hidden: keyboard users and first-timers need to find them
         transition: 'opacity 0.15s',
       }}>
         {/* Preview */}

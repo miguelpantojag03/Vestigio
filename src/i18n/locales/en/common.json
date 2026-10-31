@@ -136,6 +136,7 @@
       "rename": "Rename",
       "delete": "Delete project",
       "deleteConfirmTitle": "Delete this project?",
+      "nameTaken": "You already have a project with that name.",
       "deleteConfirmMessage": "«{{name}}» will be deleted. Its ideas are NOT deleted — they become unassigned, visible in Search."
     },
     "projectVersion": "v2.4 active",

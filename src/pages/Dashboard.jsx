@@ -161,6 +161,30 @@ export default function Dashboard() {
     return () => window.removeEventListener('am:session-expired', handleExpired)
   }, [navigate, push, t])
 
+  // Keyboard shortcuts for what's done most, advertised in the controls' tooltips
+  useEffect(() => {
+    function onKeyDown(e) {
+      const dialogOpen = !!document.querySelector('[aria-modal="true"]')
+      if (dialogOpen) return
+      if (e.key === 'Escape') {
+        setSelectionMode(false)
+        setCheckedIds(prev => prev.size ? new Set() : prev)
+        return
+      }
+      if (!e.ctrlKey && !e.metaKey) return
+      const key = e.key.toLowerCase()
+      if (key === 'n') {
+        e.preventDefault()
+        setShowNew(true)
+      } else if (key === 'f') {
+        e.preventDefault()
+        document.querySelector('[data-search-input]')?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   // Drag & drop — spring-driven (framer-motion), not native HTML5 DnD
   function revivalZoneRect() {
     return revivalZoneRef.current?.getBoundingClientRect() ?? null

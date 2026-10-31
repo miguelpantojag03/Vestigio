@@ -137,6 +137,7 @@
       "rename": "Renombrar",
       "delete": "Eliminar proyecto",
       "deleteConfirmTitle": "¿Eliminar este proyecto?",
+      "nameTaken": "Ya tienes un proyecto con ese nombre.",
       "deleteConfirmMessage": "«{{name}}» se va a eliminar. Sus ideas NO se borran — quedan sin proyecto, visibles en Buscar."
     },
     "userFallback": "Usuario"

@@ -17,6 +17,7 @@ export default function ProjectSwitcher({ projects, currentProject, onSwitchProj
   const [creating, setCreating] = useState(false)
   const [renamingId, setRenamingId] = useState(null)
   const [draft,    setDraft]    = useState('')
+  const [nameTaken, setNameTaken] = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
@@ -25,14 +26,23 @@ export default function ProjectSwitcher({ projects, currentProject, onSwitchProj
     return () => document.removeEventListener('mousedown', onOutside)
   }, [])
 
-  function startCreate() { setCreating(true); setDraft('') }
+  // Two projects with one name can't be told apart in this list or in moves
+  function isTaken(name, exceptId) {
+    const wanted = name.trim().toLowerCase()
+    return projects.some(p => p.id !== exceptId && p.name.toLowerCase() === wanted)
+  }
+  function editDraft(value) { setDraft(value); setNameTaken(false) }
+
+  function startCreate() { setCreating(true); editDraft('') }
   async function submitCreate() {
+    if (isTaken(draft)) { setNameTaken(true); return }
     if (draft.trim()) await onAddProject(draft)
     setCreating(false); setDraft('')
   }
 
-  function startRename(p) { setRenamingId(p.id); setDraft(p.name) }
+  function startRename(p) { setRenamingId(p.id); editDraft(p.name) }
   async function submitRename() {
+    if (isTaken(draft, renamingId)) { setNameTaken(true); return }
     if (draft.trim()) await onRenameProject(renamingId, draft)
     setRenamingId(null); setDraft('')
   }
@@ -81,7 +91,8 @@ export default function ProjectSwitcher({ projects, currentProject, onSwitchProj
               <div key={p.id} style={{ display:'flex', alignItems:'center' }}>
                 {renamingId === p.id ? (
                   <div style={{ ...rowStyle, flex:1 }}>
-                    <input autoFocus value={draft} onChange={e=>setDraft(e.target.value)}
+                    <input autoFocus value={draft} onChange={e=>editDraft(e.target.value)}
+                      aria-label={t('sidebar.projects.rename')} aria-invalid={nameTaken}
                       onKeyDown={e=>{ if(e.key==='Enter') submitRename(); if(e.key==='Escape') setRenamingId(null) }}
                       style={{flex:1,padding:'4px 6px',borderRadius:6,border:`1px solid ${color.blue500}`,background:color.bgBase,color:color.textPrimary,fontSize:12,fontFamily:font.ui,outline:'none'}}/>
                     <button onClick={submitRename} style={{background:'none',border:'none',cursor:'pointer',color:color.sage500,padding:2}}><Check size={13}/></button>
@@ -95,20 +106,27 @@ export default function ProjectSwitcher({ projects, currentProject, onSwitchProj
                       onMouseLeave={e=>{ if(p.id!==currentProject?.id) e.currentTarget.style.background='none' }}>
                       {p.name}
                     </button>
-                    <button onClick={() => startRename(p)} title={t('sidebar.projects.rename')} style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6}}><Pencil size={11}/></button>
+                    <button onClick={() => startRename(p)} title={t('sidebar.projects.rename')} aria-label={t('sidebar.projects.rename')} style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6}}><Pencil size={11}/></button>
                     {projects.length > 1 && (
-                      <button onClick={() => handleDelete(p)} title={t('sidebar.projects.delete')} style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6}}><Trash2 size={11}/></button>
+                      <button onClick={() => handleDelete(p)} title={t('sidebar.projects.delete')} aria-label={t('sidebar.projects.delete')} style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6}}><Trash2 size={11}/></button>
                     )}
                   </>
                 )}
               </div>
             ))}
 
+            {nameTaken && (
+              <div role="alert" style={{ padding:'4px 10px', fontSize:11, color:color.terracotta500, fontFamily:font.ui }}>
+                {t('sidebar.projects.nameTaken')}
+              </div>
+            )}
+
             <div style={{ height:1, background:color.bgBorder, margin:'4px 0' }}/>
 
             {creating ? (
               <div style={{ ...rowStyle }}>
-                <input autoFocus value={draft} onChange={e=>setDraft(e.target.value)}
+                <input autoFocus value={draft} onChange={e=>editDraft(e.target.value)}
+                  aria-label={t('sidebar.projects.newPlaceholder')} aria-invalid={nameTaken}
                   placeholder={t('sidebar.projects.newPlaceholder')}
                   onKeyDown={e=>{ if(e.key==='Enter') submitCreate(); if(e.key==='Escape') setCreating(false) }}
                   style={{flex:1,padding:'4px 6px',borderRadius:6,border:`1px solid ${color.blue500}`,background:color.bgBase,color:color.textPrimary,fontSize:12,fontFamily:font.ui,outline:'none'}}/>

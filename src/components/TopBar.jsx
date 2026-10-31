@@ -114,6 +114,8 @@ export default function TopBar({
       <div style={{flex:1,minWidth:180,position:'relative'}}>
         <Search size={13} style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',color:color.textSecondary,pointerEvents:'none'}}/>
         <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
+          data-search-input title="Ctrl+F"
+          aria-label={isSearch ? t('topbar.globalSearchPlaceholder') : t('topbar.searchPlaceholder')}
           placeholder={isSearch ? t('topbar.globalSearchPlaceholder') : t('topbar.searchPlaceholder')}
           onFocus={()=>setFocused(true)} onBlur={()=>setFocused(false)}
           style={{
@@ -204,7 +206,7 @@ export default function TopBar({
       <LanguageControl/>
 
       {/* New Relic */}
-      <motion.button whileTap={{scale:0.97}} onClick={onNewRelic}
+      <motion.button whileTap={{scale:0.97}} onClick={onNewRelic} title="Ctrl+N"
         style={{
           display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:radius.control,
           border:'none',cursor:'pointer',background:color.blue500,color:color.onPrimary,
