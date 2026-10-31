@@ -12,6 +12,7 @@ import { formatFileSize, isImage, isPDF, isText } from '../constants/fileTypes.j
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 import { formatDate } from '../lib/formatDate.js'
+import { isAndroid } from '../lib/platform.js'
 
 // ── File type icon ─────────────────────────────────────────────────
 function FileIcon({ ext, size = 18 }) {
@@ -42,7 +43,9 @@ export default function AttachmentItem({
   const [hovered, setHovered] = useState(false)
   const { originalName, extension, size, createdAt } = attachment
 
-  const canPreview = isImage(extension) || isPDF(extension) || isText(extension)
+  // Android's WebView can't show PDFs, and app-private files can't be opened by
+  // other apps there: "Save as" is the way out for everything else.
+  const canPreview = isImage(extension) || (isPDF(extension) && !isAndroid) || isText(extension)
 
   return (
     <div
@@ -108,7 +111,7 @@ export default function AttachmentItem({
           />
         )}
         {/* Open externally (non-previewable) */}
-        {!canPreview && (
+        {!canPreview && !isAndroid && (
           <ActionBtn
             icon={<ExternalLink size={13} />}
             title={t('attachments.openWith')}

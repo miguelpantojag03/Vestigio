@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "enables the default permissions",
+  "description": "What every platform needs",
   "windows": [
     "main"
   ],
@@ -11,17 +11,15 @@
     "sql:default",
     "sql:allow-execute",
     { "identifier": "fs:allow-write-file", "allow": [{ "path": "$APPLOCALDATA/**" }] },
+    { "identifier": "fs:allow-read-file",  "allow": [{ "path": "$APPLOCALDATA/**" }] },
     { "identifier": "fs:allow-mkdir",      "allow": [{ "path": "$APPLOCALDATA/**" }] },
     { "identifier": "fs:allow-remove",     "allow": [{ "path": "$APPLOCALDATA/**" }] },
     { "identifier": "fs:allow-exists",     "allow": [{ "path": "**" }] },
     { "identifier": "fs:allow-stat",       "allow": [{ "path": "**" }] },
     { "identifier": "fs:allow-copy-file",  "allow": [{ "path": "**" }] },
-    { "identifier": "opener:allow-open-url",  "allow": [{ "url": "https://accounts.google.com/*" }] },
     { "identifier": "opener:allow-open-path", "allow": [{ "path": "**" }] },
-    "oauth:allow-start",
-    "oauth:allow-cancel",
-    { "identifier": "http:default", "allow": [{ "url": "https://oauth2.googleapis.com/token" }] },
     "dialog:default",
-    "process:allow-restart"
+    "process:allow-restart",
+    "process:allow-exit"
   ]
 }

@@ -7,6 +7,7 @@ import { alpha } from '../styles/tokens.js'
 import { ThemeControl, LanguageControl } from './ThemeLanguageControls.jsx'
 import { CATEGORIES } from '../constants/categories.js'
 import { DEATH_CAUSES } from '../constants/deathCauses.js'
+import { useIsMobile } from '../hooks/useViewport.js'
 
 const FILTERS  = ['all', 'visuals', 'drafts']
 const SORT_OPT = ['date', 'title', 'category', 'status']
@@ -92,6 +93,7 @@ export default function TopBar({
   const [focused,  setFocused]  = useState(false)
   const sortRef                 = useRef(null)
   const isSearch = section === 'search'
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     function h(e) { if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false) }
@@ -107,11 +109,11 @@ export default function TopBar({
       style={{
         display:'flex',alignItems:'center',gap:10,padding:'10px 18px',
         borderRadius:radius.glass,
-        position:'sticky',top:14,zIndex:20,
-        margin:'0 20px 18px',flexWrap:'wrap',
+        position:'sticky',top: isMobile ? 8 : 14,zIndex:20,
+        margin: isMobile ? '8px 12px 14px' : '0 20px 18px',flexWrap:'wrap',
       }}>
       {/* Search */}
-      <div style={{flex:1,minWidth:180,position:'relative'}}>
+      <div style={{flex:1,flexBasis: isMobile ? '100%' : undefined,minWidth:180,position:'relative'}}>
         <Search size={13} style={{position:'absolute',left:11,top:'50%',transform:'translateY(-50%)',color:color.textSecondary,pointerEvents:'none'}}/>
         <input type="text" value={search} onChange={e=>setSearch(e.target.value)}
           data-search-input title="Ctrl+F"
@@ -201,18 +203,18 @@ export default function TopBar({
         </AnimatePresence>
       </div>}
 
-      {/* Theme + language quick access */}
-      <ThemeControl/>
-      <LanguageControl/>
+      {/* Theme + language quick access — on a phone they're in Settings */}
+      {!isMobile && <ThemeControl/>}
+      {!isMobile && <LanguageControl/>}
 
       {/* New Relic */}
-      <motion.button whileTap={{scale:0.97}} onClick={onNewRelic} title="Ctrl+N"
+      <motion.button whileTap={{scale:0.97}} onClick={onNewRelic} title="Ctrl+N" aria-label={t('topbar.newRelic')}
         style={{
           display:'flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:radius.control,
           border:'none',cursor:'pointer',background:color.blue500,color:color.onPrimary,
           fontSize:13,fontWeight:700,fontFamily:font.ui,flexShrink:0,
         }}>
-        <Plus size={14} strokeWidth={2.5}/> {t('topbar.newRelic')}
+        <Plus size={14} strokeWidth={2.5}/> {!isMobile && t('topbar.newRelic')}
       </motion.button>
     </div>
   )

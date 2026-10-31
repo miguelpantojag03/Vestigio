@@ -115,6 +115,7 @@
     }
   },
   "sidebar": {
+    "mobileNav": { "gallery": "Archivo", "search": "Buscar", "recent": "Recientes", "revived": "Revividas", "deleted": "Papelera" },
     "nav": {
       "archive": "El Archivo",
       "archiveDesc": "Todas las reliquias",

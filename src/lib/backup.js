@@ -11,12 +11,15 @@
 // another machine: accounts come back and file paths follow the new folder.
 
 import { save, open } from '@tauri-apps/plugin-dialog'
-import { relaunch } from '@tauri-apps/plugin-process'
+import { relaunch, exit } from '@tauri-apps/plugin-process'
+import { readFile, writeFile, remove } from '@tauri-apps/plugin-fs'
 import { invoke } from '@tauri-apps/api/core'
 import { appLocalDataDir, join, sep } from '@tauri-apps/api/path'
 import { getDb } from './db.js'
 import { rebaseStoredPaths } from './restorePaths.js'
 import MockAuthService from '../auth/MockAuthService.js'
+import { isAndroid } from './platform.js'
+import { saveBytesAs, pickBytes } from './androidFiles.js'
 
 const BACKUP_FILTERS = [{ name: 'Vestigio Backup', extensions: ['zip'] }]
 
@@ -26,12 +29,23 @@ const BACKUP_FILTERS = [{ name: 'Vestigio Backup', extensions: ['zip'] }]
  * @returns {Promise<string|null>} the written path, or null if cancelled
  */
 export async function exportBackup() {
-  const destPath = await save({
-    defaultPath: `vestigio-backup-${new Date().toISOString().slice(0, 10)}.zip`,
-    filters: BACKUP_FILTERS,
-  })
-  if (!destPath) return null
+  const filename = `vestigio-backup-${new Date().toISOString().slice(0, 10)}.zip`
+  if (isAndroid) {
+    // The picker yields a content:// URI Rust can't write to: zip here, then hand over the bytes.
+    const temp = await join(await appLocalDataDir(), `_export_${Date.now()}.zip`)
+    await writeBackupZip(temp)
+    const bytes = await readFile(temp)
+    await remove(temp)
+    return (await saveBytesAs(filename, bytes)) ? filename : null
+  }
 
+  const destPath = await save({ defaultPath: filename, filters: BACKUP_FILTERS })
+  if (!destPath) return null
+  await writeBackupZip(destPath)
+  return destPath
+}
+
+async function writeBackupZip(destPath) {
   const stagingPath = await join(await appLocalDataDir(), `_export_staging_${Date.now()}.db`)
   const db = await getDb()
   // Not parameter-bound: VACUUM INTO's filename grammar is inconsistent
@@ -40,7 +54,6 @@ export async function exportBackup() {
   await db.execute(`VACUUM INTO '${stagingPath.replace(/'/g, "''")}'`)
   const accountsJson = JSON.stringify(await MockAuthService.exportUsers())
   await invoke('export_backup', { stagingDbPath: stagingPath, accountsJson, destZipPath: destPath })
-  return destPath
 }
 
 /**
@@ -49,6 +62,20 @@ export async function exportBackup() {
  * @returns {Promise<boolean>} false if the user cancelled the picker
  */
 export async function importBackup() {
+  if (isAndroid) {
+    const bytes = await pickBytes()
+    if (!bytes) return false
+    const temp = await join(await appLocalDataDir(), `_import_${Date.now()}.zip`)
+    await writeFile(temp, bytes)
+    try {
+      await invoke('import_backup', { srcZipPath: temp })
+    } finally {
+      await remove(temp)
+    }
+    await exit(0) // the restore applies on the next open: Android has no relaunch
+    return true
+  }
+
   const srcPath = await open({ multiple: false, filters: BACKUP_FILTERS })
   if (!srcPath) return false
   await invoke('import_backup', { srcZipPath: srcPath })

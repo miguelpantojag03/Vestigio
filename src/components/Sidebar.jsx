@@ -6,7 +6,7 @@ import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 import logo from '../assets/vestigio-logo.svg'
 
-const NAV = [
+export const NAV = [
   { id: 'gallery',  Icon: Image },
   { id: 'search',   Icon: Search },
   { id: 'recent',   Icon: Clock },

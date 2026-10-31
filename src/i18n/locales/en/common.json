@@ -115,6 +115,7 @@
     }
   },
   "sidebar": {
+    "mobileNav": { "gallery": "Archive", "search": "Search", "recent": "Recent", "revived": "Revived", "deleted": "Trash" },
     "nav": {
       "archive": "The Archive",
       "archiveDesc": "All relics",

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { AnimatePresence }  from 'framer-motion'
 import { useNavigate }     from 'react-router-dom'
 import { useTranslation }  from 'react-i18next'
+import { motion } from 'framer-motion'
 import { Archive, RotateCcw, Layers, Trash2, CheckSquare } from 'lucide-react'
 import { useAuth }         from '../auth/AuthProvider.jsx'
 import { useToast }        from '../components/Toast.jsx'
@@ -18,6 +19,9 @@ import NewRelicModal       from '../components/NewRelicModal.jsx'
 import EditRelicModal      from '../components/EditRelicModal.jsx'
 import AIInsightsPanel     from '../components/AIInsightsPanel.jsx'
 import BulkActionBar       from '../components/BulkActionBar.jsx'
+import { MobileHeader, BottomNav } from '../components/MobileNav.jsx'
+import { useIsMobile, useIsTouch } from '../hooks/useViewport.js'
+import { isAndroid }       from '../lib/platform.js'
 import SettingsModal       from '../components/SettingsModal.jsx'
 import { useTheme }        from '../context/ThemeContext.jsx'
 import { isInsideRect, releaseHitsRect } from '../lib/momentum.js'
@@ -93,7 +97,7 @@ function LoadFailed({ onRetry }) {
 // ── Main ──────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { t }              = useTranslation()
-  const { color, font, radius } = useTheme()
+  const { color, font, radius, spring } = useTheme()
   const { user }           = useAuth()
   const { push }           = useToast()
   const navigate           = useNavigate()
@@ -128,6 +132,10 @@ export default function Dashboard() {
   const [showSettings,  setShowSettings]  = useState(false)
   const [aiAnalysis,    setAiAnalysis]    = useState({})  // { [relicId]: string }
   const [aiLoadingId,   setAiLoadingId]   = useState(null)
+  const isMobile = useIsMobile()
+  const isTouch  = useIsTouch()
+  const canDrag  = !isMobile && !isTouch
+  const [detailsOpen,   setDetailsOpen]   = useState(false) // the phone's full-screen details
   const [selectionMode, setSelectionMode] = useState(false)
   const [checkedIds,    setCheckedIds]    = useState(() => new Set())
   const revivalZoneRef                    = useRef(null)
@@ -160,6 +168,40 @@ export default function Dashboard() {
     window.addEventListener('am:session-expired', handleExpired)
     return () => window.removeEventListener('am:session-expired', handleExpired)
   }, [navigate, push, t])
+
+  // Android's back button: closes whatever is on top, then steps back to the
+  // gallery, and only then leaves the app.
+  const backStateRef = useRef({})
+  useEffect(() => {
+    backStateRef.current = { detailsOpen, selectionMode, section }
+  })
+  useEffect(() => {
+    if (!isAndroid) return
+    let unlisten
+    let cancelled = false
+    import('@tauri-apps/api/app').then(({ onBackButtonPress }) =>
+      onBackButtonPress(async () => {
+        const state = backStateRef.current
+        if (document.querySelector('[aria-modal="true"]')) {
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+        } else if (state.detailsOpen) {
+          setDetailsOpen(false)
+        } else if (state.selectionMode) {
+          setSelectionMode(false)
+          setCheckedIds(new Set())
+        } else if (state.section !== 'gallery') {
+          setSection('gallery')
+        } else {
+          const { exit } = await import('@tauri-apps/plugin-process')
+          await exit(0)
+        }
+      })
+    ).then(listener => {
+      if (cancelled) listener.unregister()
+      else unlisten = listener
+    }).catch(err => console.error('[Dashboard] Could not handle the back button:', err))
+    return () => { cancelled = true; unlisten?.unregister() }
+  }, [setSection])
 
   // Keyboard shortcuts for what's done most, advertised in the controls' tooltips
   useEffect(() => {
@@ -240,6 +282,7 @@ export default function Dashboard() {
   async function handleTrash(ids) {
     try {
       await trash(ids)
+      setDetailsOpen(false)
       push(t('dashboard.toast.trashed', { count: ids.length }), 'info', 8000, {
         label: t('common.undo'),
         onClick: () => handleRestore(ids),
@@ -253,6 +296,7 @@ export default function Dashboard() {
     try {
       await restore(ids)
       setSelectedId(ids[0])
+      setDetailsOpen(false)
       push(t('dashboard.toast.restored', { count: ids.length }), 'success')
     } catch (err) {
       push(err.message, 'error')
@@ -271,6 +315,7 @@ export default function Dashboard() {
     if (!ok) return
     try {
       await removeForever(ids)
+      setDetailsOpen(false)
       push(t('dashboard.toast.deletedForever', { count: ids.length }), 'info')
       exitSelection()
     } catch (err) {
@@ -360,17 +405,53 @@ export default function Dashboard() {
       else if (relic.projectId !== currentProjectId) switchProject(relic.projectId)
     }
     setSelectedId(id)
+    if (isMobile) setDetailsOpen(true)
+  }
+
+  // On a phone, selecting a card also opens it: there's no side panel to look at.
+  function selectCard(id) {
+    setSelectedId(id)
+    if (isMobile) setDetailsOpen(true)
+  }
+
+  const detailsProps = {
+    relic: selected,
+    projectName: projects.find(p => p.id === selected?.projectId)?.name,
+    onUpdateRelic: update,
+    onRevive: handleRevive,
+    onRearchive: handleRearchive,
+    onTrash: id => handleTrash([id]),
+    onRestore: id => handleRestore([id]),
+    onDeleteForever: id => handleDeleteForever([id]),
+    onEdit: relic => setEditRelic(relic),
+    onAnalyze: handleAnalyze,
+    aiAnalysis: selected ? aiAnalysis[selected.id] : null,
+    aiLoading: aiLoadingId === selected?.id,
   }
 
   const headerButton = {display:'flex',alignItems:'center',gap:6,padding:'7px 12px',borderRadius:radius.control,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.textSecondary,fontSize:12,fontWeight:600,fontFamily:font.ui,cursor:'pointer'}
 
   return (
-    <div style={{display:'flex',flexDirection:'column',height:'100vh',background:color.bgBase,overflow:'hidden'}}>
+    <div style={{display:'flex',flexDirection:'column',height:'100dvh',background:color.bgBase,overflow:'hidden'}}>
       <ConfirmModalUI/>
+
+      {isMobile && (
+        <MobileHeader
+          user={user}
+          onOpenSettings={() => setShowSettings(true)}
+          projects={projects}
+          currentProject={currentProject}
+          onSwitchProject={switchProject}
+          onAddProject={addProject}
+          onRenameProject={renameProject}
+          onRemoveProject={removeProject}
+          confirm={confirm}
+        />
+      )}
 
       {/* 3-column layout */}
       <div style={{display:'flex',flex:1,overflow:'hidden'}}>
-        <Sidebar
+        {!isMobile && <Sidebar
           user={user}
           activeSection={section}
           onSection={setSection}
@@ -382,7 +463,7 @@ export default function Dashboard() {
           onRenameProject={renameProject}
           onRemoveProject={removeProject}
           confirm={confirm}
-        />
+        />}
 
         {/* Center */}
         <main style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',background:color.bgSurface,position:'relative'}}>
@@ -400,11 +481,11 @@ export default function Dashboard() {
               sortField={sortField} sortDir={sortDir} cycleSort={cycleSort}
             />
 
-            <div style={{padding:'4px 20px 120px'}}>
+            <div style={{padding:isMobile?'0 12px 24px':'4px 20px 120px'}}>
 
               {/* Header */}
               <div style={{marginBottom:2}}>
-                <h1 style={{fontSize:28,fontWeight:600,fontFamily:font.display,color:color.textPrimary,letterSpacing:'-0.02em',lineHeight:1.1,margin:0}}>
+                <h1 style={{fontSize:isMobile?24:28,fontWeight:600,fontFamily:font.display,color:color.textPrimary,letterSpacing:'-0.02em',lineHeight:1.1,margin:0}}>
                   {t(`dashboard.sectionTitle.${section}`)}
                 </h1>
                 <p style={{fontSize:12,color:color.textSecondary,marginTop:4,marginBottom:0}}>
@@ -461,8 +542,8 @@ export default function Dashboard() {
               ) : (
                 <div style={{
                   display:'grid',
-                  gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',
-                  gap:14,
+                  gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile?150:200}px,1fr))`,
+                  gap:isMobile?10:14,
                 }}>
                   <AnimatePresence>
                     {visible.map((r,i)=>(
@@ -473,7 +554,8 @@ export default function Dashboard() {
                           ? (projects.find(p => p.id === r.projectId)?.name ?? t('dashboard.noProject'))
                           : undefined}
                         isSelected={selectionMode ? checkedIds.has(r.id) : r.id===selected?.id}
-                        onSelect={selectionMode ? toggleChecked : setSelectedId}
+                        onSelect={selectionMode ? toggleChecked : selectCard}
+                        draggable={canDrag}
                         onCardDrag={handleCardDrag}
                         onCardDragEnd={handleCardDragEnd}
                       />
@@ -503,7 +585,7 @@ export default function Dashboard() {
 
           {/* Outside the scroller: it has to stay put to be a drop target for
               a card from anywhere in a long list. */}
-          {section !== 'deleted' && !selectionMode && (
+          {canDrag && section !== 'deleted' && !selectionMode && (
             <RevivalZone
               ref={revivalZoneRef}
               isDragging={dragging}
@@ -514,21 +596,24 @@ export default function Dashboard() {
         </main>
 
         {/* Right panel */}
-        <RelicDetails
-          relic={selected}
-          projectName={projects.find(p => p.id === selected?.projectId)?.name}
-          onUpdateRelic={update}
-          onRevive={handleRevive}
-          onRearchive={handleRearchive}
-          onTrash={id => handleTrash([id])}
-          onRestore={id => handleRestore([id])}
-          onDeleteForever={id => handleDeleteForever([id])}
-          onEdit={relic=>setEditRelic(relic)}
-          onAnalyze={handleAnalyze}
-          aiAnalysis={selected ? aiAnalysis[selected.id] : null}
-          aiLoading={aiLoadingId === selected?.id}
-        />
+        {!isMobile && <RelicDetails {...detailsProps}/>}
       </div>
+
+      {isMobile && <BottomNav activeSection={section} onSection={setSection}/>}
+
+      {/* The phone's details: over everything, sliding in from the side it leaves by */}
+      <AnimatePresence>
+        {isMobile && detailsOpen && selected && (
+          <motion.div
+            key="details"
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+            transition={spring.drop}
+            style={{ position:'fixed', inset:0, zIndex:150 }}
+          >
+            <RelicDetails {...detailsProps} onClose={() => setDetailsOpen(false)}/>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modals */}
       <AnimatePresence>

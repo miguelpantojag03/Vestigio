@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
 
-export default function ProjectSwitcher({ projects, currentProject, onSwitchProject, onAddProject, onRenameProject, onRemoveProject, confirm }) {
+export default function ProjectSwitcher({ projects, currentProject, onSwitchProject, onAddProject, onRenameProject, onRemoveProject, confirm, compact = false }) {
   const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
   const [open,     setOpen]     = useState(false)
@@ -59,10 +59,10 @@ export default function ProjectSwitcher({ projects, currentProject, onSwitchProj
   const rowStyle = { display:'flex', alignItems:'center', gap:6, padding:'7px 10px', fontSize:12, fontFamily:font.ui }
 
   return (
-    <div ref={ref} style={{ margin:'0 10px 10px', position:'relative' }}>
+    <div ref={ref} style={{ margin: compact ? 0 : '0 10px 10px', position:'relative' }}>
       <button onClick={() => setOpen(o => !o)}
         style={{
-          width:'100%', display:'flex', alignItems:'center', gap:10, padding:12,
+          width:'100%', display:'flex', alignItems:'center', gap:10, padding: compact ? 6 : 12,
           borderRadius:radius.card, background:color.bgElevated, border:`1px solid ${color.bgBorder}`,
           cursor:'pointer', textAlign:'left',
         }}>
@@ -83,10 +83,10 @@ export default function ProjectSwitcher({ projects, currentProject, onSwitchProj
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity:0, y:6, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:6, scale:0.98 }}
+            initial={{ opacity:0, y: compact ? -6 : 6, scale:0.98 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y: compact ? -6 : 6, scale:0.98 }}
             transition={spring.tap}
             className="glass glass-neutral"
-            style={{ position:'absolute', bottom:'calc(100% + 8px)', left:0, right:0, borderRadius:radius.card, padding:'4px 0', zIndex:50, maxHeight:260, overflowY:'auto', transformOrigin:'bottom center' }}>
+            style={{ position:'absolute', ...(compact ? { top:'calc(100% + 8px)' } : { bottom:'calc(100% + 8px)' }), left:0, right:0, borderRadius:radius.card, padding:'4px 0', zIndex:50, maxHeight:260, overflowY:'auto', transformOrigin: compact ? 'top center' : 'bottom center' }}>
             {projects.map(p => (
               <div key={p.id} style={{ display:'flex', alignItems:'center' }}>
                 {renamingId === p.id ? (

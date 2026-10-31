@@ -17,11 +17,13 @@
 
 import { getDb } from './db.js'
 import { getAttachmentsDir } from './fsPaths.js'
-import { writeFile, remove, mkdir, copyFile } from '@tauri-apps/plugin-fs'
+import { writeFile, readFile, remove, mkdir, copyFile } from '@tauri-apps/plugin-fs'
 import { save } from '@tauri-apps/plugin-dialog'
 import { openPath } from '@tauri-apps/plugin-opener'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { emitRelicDataChanged } from './relicDataEvents.js'
+import { isAndroid } from './platform.js'
+import { saveBytesAs } from './androidFiles.js'
 
 function makeId() {
   return `att_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
@@ -148,6 +150,7 @@ export function createPreviewURL(attachment) {
  * @returns {Promise<boolean>} false if the user cancelled
  */
 export async function downloadAttachment(attachment) {
+  if (isAndroid) return saveBytesAs(attachment.originalName, await readFile(attachment.filePath))
   const dest = await save({ defaultPath: attachment.originalName })
   if (!dest) return false
   await copyFile(attachment.filePath, dest)

@@ -27,6 +27,7 @@ import { pickFileToLink, secureCopy } from '../lib/fileLinks.js'
 import { useTheme }                  from '../context/ThemeContext.jsx'
 import { registerUnsavedChanges }    from '../lib/windowCloseGuard.js'
 import { alpha }                     from '../styles/tokens.js'
+import { isAndroid }                 from '../lib/platform.js'
 
 // ── cover image helpers ───────────────────────────────────────────
 const COVER_MAX_B    = 5 * 1024 * 1024
@@ -380,14 +381,14 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
           />
         </div>
 
-        {/* Linked file */}
-        <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
+        {/* Linked file — Android has no stable file paths to link to */}
+        {!isAndroid && <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
           <div style={{...S.sec,marginBottom:10}}>{t('modals.newRelic.linkedFile')}</div>
           <LinkedFilePicker
             linkedFile={linkedFile} onPick={handlePickFile} onClear={()=>{setLinkedFile(null);setSecureCopyFlag(false)}}
             secureCopy={secureCopyFlag} onSecureCopyChange={setSecureCopyFlag}
           />
-        </div>
+        </div>}
 
         {/* Attachments */}
         <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>

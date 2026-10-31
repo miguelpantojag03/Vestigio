@@ -4,7 +4,7 @@ import {
   RotateCcw, Trash2, Pencil, Paperclip, Expand,
   Image as ImageIcon, Sparkles, X,
   Link2, ExternalLink, RefreshCw, ShieldCheck, AlertTriangle,
-  Layers, Plus, ChevronDown, ChevronUp, ArrowUpCircle, Archive, Undo2,
+  Layers, Plus, ChevronDown, ChevronUp, ArrowUpCircle, Archive, Undo2, ArrowLeft,
 } from 'lucide-react'
 import { getThumbnail } from './Thumbnails.jsx'
 import { useAttachments }  from '../hooks/useAttachments.js'
@@ -441,7 +441,7 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
 }
 
 /* ─── main component ──────────────────────────────────────────────── */
-export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevive, onRearchive, onTrash, onRestore, onDeleteForever, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
+export default function RelicDetails({ onClose, relic, projectName, onUpdateRelic, onRevive, onRearchive, onTrash, onRestore, onDeleteForever, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
   const { t } = useTranslation()
   const { color, font } = useTheme()
   const { user } = useAuth()
@@ -469,17 +469,24 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
 
   return (
     <aside style={{
-      width:260,flexShrink:0,display:'flex',flexDirection:'column',
-      height:'100%',background:color.bgBase,borderLeft:`1px solid ${color.bgBorder}`,
+      // onClose means it's the phone's full-screen sheet rather than a side panel
+      width:onClose?'100%':260,flexShrink:0,display:'flex',flexDirection:'column',
+      height:'100%',background:color.bgBase,borderLeft:onClose?'none':`1px solid ${color.bgBorder}`,
       overflowY:'auto',
     }}>
       {/* header */}
       <div style={{
-        padding:'14px 16px 10px',
-        display:'flex',alignItems:'center',justifyContent:'space-between',
+        padding:onClose?'calc(8px + env(safe-area-inset-top)) 12px 8px':'14px 16px 10px',
+        display:'flex',alignItems:'center',justifyContent:'space-between',gap:8,
         borderBottom: relic ? `1px solid ${color.bgBorder}` : 'none',flexShrink:0,
       }}>
-        <span style={{fontSize:14,fontWeight:600,fontFamily:font.display,color:color.textPrimary}}>{t('relicDetails.title')}</span>
+        {onClose && (
+          <button onClick={onClose} aria-label={t('common.close')}
+            style={{background:'none',border:'none',cursor:'pointer',color:color.textPrimary,padding:8,display:'flex'}}>
+            <ArrowLeft size={20}/>
+          </button>
+        )}
+        <span style={{flex:onClose?1:undefined,fontSize:14,fontWeight:600,fontFamily:font.display,color:color.textPrimary}}>{t('relicDetails.title')}</span>
         {relic && !inTrash && (
           <button onClick={()=>onEdit(relic)}
             style={{display:'flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:6,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.textSecondary,fontSize:11,fontWeight:600,fontFamily:font.ui,cursor:'pointer',transition:'border-color 0.12s,color 0.12s'}}

@@ -7,7 +7,7 @@ export default function LoadingScreen() {
   return (
     <div
       className="flex items-center justify-center"
-      style={{ height: '100vh', background: color.bgSurface }}
+      style={{ height: '100dvh', background: color.bgSurface }}
     >
       <div className="flex flex-col items-center gap-4">
         {/* Logo with pulse */}

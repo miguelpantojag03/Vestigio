@@ -32,7 +32,7 @@ export default function Modal({ title, onClose, children }) {
       inert={!isPresent}
       className="scrim"
       style={{
-        position: 'fixed', inset: 0, zIndex: 200,
+        position: 'fixed', inset: 0, zIndex: 200, padding: 12,
         background: color.scrimBg,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}

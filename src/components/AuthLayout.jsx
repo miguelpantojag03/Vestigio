@@ -58,10 +58,10 @@ export default function AuthLayout({ children }) {
   const { color, radius, font, spring } = useTheme()
   return (
     <div style={{
-      height: '100vh', overflow: 'hidden', position: 'relative',
+      height: '100dvh', overflow: 'hidden', position: 'relative',
       background: color.bgBase, display: 'flex', flexDirection: 'column',
     }}>
-      <div style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px' }}>
+      <div style={{ flex: 1, position: 'relative', display: 'flex', overflowY: 'auto', padding: 'clamp(12px, 4vw, 32px)' }}>
         <Atmosphere />
 
         <motion.div
@@ -71,9 +71,9 @@ export default function AuthLayout({ children }) {
           className="glass glass-blue"
           style={{
             position: 'relative', zIndex: 1,
-            width: '100%', maxWidth: 400,
+            width: '100%', maxWidth: 400, margin: 'auto',
             borderRadius: radius.glass,
-            padding: '36px 32px',
+            padding: 'clamp(24px, 6vw, 36px) clamp(20px, 5vw, 32px)',
           }}>
           {/* Wordmark */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>

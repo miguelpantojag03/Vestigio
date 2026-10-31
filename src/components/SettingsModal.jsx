@@ -11,6 +11,8 @@ import { useToast }      from './Toast.jsx'
 import { useConfirm }    from './ConfirmModal.jsx'
 import { useTheme }      from '../context/ThemeContext.jsx'
 import { ThemeControl, LanguageControl } from './ThemeLanguageControls.jsx'
+import { isAndroid }     from '../lib/platform.js'
+import { saveTextAs }    from '../lib/androidFiles.js'
 
 function PreferenceRow({ label, children }) {
   const { color, font } = useTheme()
@@ -22,6 +24,18 @@ function PreferenceRow({ label, children }) {
   )
 }
 
+// Browser-style downloads don't exist in Android's WebView.
+async function deliverText(filename, text, type) {
+  if (isAndroid) return saveTextAs(filename, text)
+  const url = URL.createObjectURL(new Blob([text], { type }))
+  const a   = document.createElement('a')
+  a.href     = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+  return true
+}
+
 function ExportSection({ userId }) {
   const { t } = useTranslation()
   const { color } = useTheme()
@@ -29,14 +43,8 @@ function ExportSection({ userId }) {
 
   async function exportJSON() {
     const relics = (await getRelics(userId)).filter(r => !r.deletedAt)
-    const blob = new Blob([JSON.stringify(relics, null, 2)], { type: 'application/json' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `vestigio-export-${new Date().toISOString().slice(0,10)}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    push(t('modals.settings.exportedJSON'), 'success')
+    const saved = await deliverText(`vestigio-export-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(relics, null, 2), 'application/json')
+    if (saved) push(t('modals.settings.exportedJSON'), 'success')
   }
 
   async function exportCSV() {
@@ -50,14 +58,8 @@ function ExportSection({ userId }) {
     )
     // The BOM is what makes Excel read this as UTF-8 instead of garbling accents.
     const csv  = '\uFEFF' + [headers.join(','), ...rows].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `vestigio-export-${new Date().toISOString().slice(0,10)}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-    push(t('modals.settings.exportedCSV'), 'success')
+    const saved = await deliverText(`vestigio-export-${new Date().toISOString().slice(0,10)}.csv`, csv, 'text/csv;charset=utf-8;')
+    if (saved) push(t('modals.settings.exportedCSV'), 'success')
   }
 
   return (

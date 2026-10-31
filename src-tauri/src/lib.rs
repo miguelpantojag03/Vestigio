@@ -1,3 +1,4 @@
+#[cfg(desktop)]
 use tauri::Manager;
 use tauri_plugin_sql::{Migration, MigrationKind};
 
@@ -74,17 +75,23 @@ pub fn run() {
     },
   ];
 
-  tauri::Builder::default()
-    // Must be the first plugin registered. A second launch hands its args
-    // to this callback instead of opening its own window/storage context —
-    // without this, two windows writing to the same localStorage/IndexedDB
-    // profile can silently overwrite each other's saves.
+  let builder = tauri::Builder::default();
+
+  // Must be the first plugin registered. A second launch hands its args
+  // to this callback instead of opening its own window/storage context —
+  // without this, two windows writing to the same localStorage/IndexedDB
+  // profile can silently overwrite each other's saves.
+  #[cfg(desktop)]
+  let builder = builder
     .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
       if let Some(window) = app.get_webview_window("main") {
         let _ = window.unminimize();
         let _ = window.set_focus();
       }
     }))
+    .plugin(tauri_plugin_oauth::init());
+
+  builder
     .plugin(
       tauri_plugin_sql::Builder::default()
         .add_migrations("sqlite:archivo_muerto.db", migrations)
@@ -92,7 +99,6 @@ pub fn run() {
     )
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_opener::init())
-    .plugin(tauri_plugin_oauth::init())
     .plugin(tauri_plugin_http::init())
     .plugin(tauri_plugin_dialog::init())
     .plugin(tauri_plugin_process::init())

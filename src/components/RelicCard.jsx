@@ -22,7 +22,7 @@ function CategoryIcon({ cat }) {
   }
 }
 
-export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onCardDragEnd, animIndex = 0, selectionMode = false, projectLabel }) {
+export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onCardDragEnd, animIndex = 0, selectionMode = false, projectLabel, draggable = true }) {
   const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
   const [attCount, setAttCount] = useState(0)
@@ -51,7 +51,7 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
 
   return (
     <motion.div
-      drag={!relic.deletedAt && !selectionMode}
+      drag={draggable && !relic.deletedAt && !selectionMode}
       dragSnapToOrigin
       dragElastic={0.12}
       dragMomentum={false}

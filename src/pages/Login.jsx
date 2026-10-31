@@ -13,6 +13,7 @@ import { useToast } from '../components/Toast.jsx'
 import { getLoginSchema } from '../lib/validators.js'
 import { useTheme } from '../context/ThemeContext.jsx'
 import { alpha } from '../styles/tokens.js'
+import { isAndroid } from '../lib/platform.js'
 
 export default function Login() {
   const { t }      = useTranslation()
@@ -130,9 +131,11 @@ export default function Login() {
           {loading ? t('auth.login.submitting') : t('auth.login.submit')}
         </PrimaryButton>
 
+        {/* Google sign-in — opens the system browser, real OAuth. Not on Android:
+            it needs a local loopback server, which Google doesn't accept there. */}
+        {!isAndroid && <>
         <Divider label={t('auth.login.or')} />
 
-        {/* Google sign-in — opens the system browser, real OAuth */}
         <button
           type="button"
           onClick={handleGoogleSignIn}
@@ -161,6 +164,7 @@ export default function Login() {
           )}
           {googleLoading ? t('auth.login.googleButtonLoading') : t('auth.login.googleButton')}
         </button>
+        </>}
 
         {/* Demo account fill — development only: credentials don't belong on a shipped login screen */}
         {import.meta.env.DEV && <button

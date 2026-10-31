@@ -7,7 +7,7 @@ import { useToast }     from './Toast.jsx'
 import { useNavigate }  from 'react-router-dom'
 import { useTheme }     from '../context/ThemeContext.jsx'
 
-export default function UserMenu({ user, onOpenSettings }) {
+export default function UserMenu({ onOpenSettings, opensDown = false }) {
   const { t } = useTranslation()
   const { color, radius, font, spring } = useTheme()
   const [open, setOpen] = useState(false)
@@ -43,7 +43,7 @@ export default function UserMenu({ user, onOpenSettings }) {
   return (
     <div ref={ref} style={{position:'relative'}}>
       <button onClick={()=>setOpen(o=>!o)}
-        style={{background:'none',border:'none',cursor:'pointer',color:open?color.textPrimary:color.textSecondary,padding:2,display:'flex',alignItems:'center',transition:'color 0.15s'}}
+        style={{background:'none',border:'none',cursor:'pointer',color:open?color.textPrimary:color.textSecondary,padding:opensDown?10:2,display:'flex',alignItems:'center',transition:'color 0.15s'}}
         onMouseEnter={e=>e.currentTarget.style.color=color.textPrimary}
         onMouseLeave={e=>{if(!open)e.currentTarget.style.color=color.textSecondary}}
         aria-label={t('userMenu.menuLabel')}>
@@ -53,11 +53,12 @@ export default function UserMenu({ user, onOpenSettings }) {
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{opacity:0,y:4,scale:0.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:4,scale:0.98}}
+            initial={{opacity:0,y:opensDown?-4:4,scale:0.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:opensDown?-4:4,scale:0.98}}
             transition={spring.tap}
             className="glass glass-neutral"
             style={{
-              position:'absolute',bottom:'130%',right:0,transformOrigin:'bottom right',
+              position:'absolute',right:0,
+              ...(opensDown ? {top:'130%',transformOrigin:'top right'} : {bottom:'130%',transformOrigin:'bottom right'}),
               borderRadius:radius.card,
               padding:'4px 0',minWidth:160,zIndex:100,
             }}>

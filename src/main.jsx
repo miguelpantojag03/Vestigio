@@ -12,6 +12,7 @@ import AppRouter from './AppRouter.jsx'
 import { hasUnsavedChanges } from './lib/windowCloseGuard.js'
 import { migrateLegacyData } from './lib/legacyMigration.js'
 import { finishPendingRestore } from './lib/backup.js'
+import { isAndroid } from './lib/platform.js'
 
 // ── Close guard ─────────────────────────────────────────────────────
 // Blocks a native window close while a modal has unsaved form data, so
@@ -20,7 +21,7 @@ import { finishPendingRestore } from './lib/backup.js'
 function CloseGuard() {
   const { t } = useTranslation()
   useEffect(() => {
-    if (!window.__TAURI_INTERNALS__) return
+    if (!window.__TAURI_INTERNALS__ || isAndroid) return // Android has no window to close
     let unlisten
     let cancelled = false
     import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {

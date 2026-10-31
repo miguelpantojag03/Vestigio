@@ -3,6 +3,7 @@ import { X, CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext.jsx'
+import { useIsMobile } from '../hooks/useViewport.js'
 
 const ToastContext = createContext(null)
 
@@ -51,12 +52,15 @@ function ToastContainer({ toasts, onDismiss }) {
   // In the app, stay over the gallery: the bottom-right corner is the details
   // panel's action buttons, and just above the revival zone a drop still hits it.
   const inApp = useLocation().pathname === '/app'
+  const isMobile = useIsMobile()
   return (
     <div
       style={{
+        pointerEvents: 'none',
         position: 'fixed',
-        bottom: inApp ? 88 : 24,
-        right: inApp ? 284 : 24,
+        bottom: isMobile ? 'calc(72px + env(safe-area-inset-bottom))' : inApp ? 88 : 24,
+        right: isMobile ? 12 : inApp ? 284 : 24,
+        left: isMobile ? 12 : undefined,
         display: 'flex',
         flexDirection: 'column',
         gap: 8,
@@ -84,6 +88,7 @@ function ToastItem({ toast, onDismiss }) {
       transition={spring.tap}
       className="glass glass-neutral"
       style={{
+        pointerEvents: 'auto',
         display: 'flex',
         alignItems: 'center',
         gap: 10,
@@ -92,7 +97,7 @@ function ToastItem({ toast, onDismiss }) {
         color: color.textPrimary,
         fontFamily: font.ui,
         fontSize: 13,
-        minWidth: 260,
+        minWidth: 0,
         maxWidth: 360,
       }}
     >

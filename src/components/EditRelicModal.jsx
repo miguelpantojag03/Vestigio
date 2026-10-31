@@ -22,6 +22,7 @@ import { Spinner }          from './FormField.jsx'
 import { useTheme }         from '../context/ThemeContext.jsx'
 import { alpha }            from '../styles/tokens.js'
 import { registerUnsavedChanges } from '../lib/windowCloseGuard.js'
+import { isAndroid }        from '../lib/platform.js'
 
 // ── Cover image helpers (same resize logic as NewRelicModal) ──────
 const COVER_MAX_B    = 5 * 1024 * 1024
@@ -315,14 +316,14 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
             <AITagSuggester title={title} description={description} category={category} currentTags={tags} onAdd={suggested=>setTags(prev=>[...new Set([...prev,...suggested])])}/>
           </div>
 
-          {/* Linked file */}
-          <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
+          {/* Linked file — Android has no stable file paths to link to */}
+          {!isAndroid && <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
             <div style={{...S.sec,marginBottom:10}}>{t('modals.newRelic.linkedFile')}</div>
             <LinkedFilePicker
               linkedFile={linkedFile} onPick={handlePickFile} onClear={()=>{setLinkedFile(null);setSecureCopyFlag(false)}}
               secureCopy={secureCopyFlag} onSecureCopyChange={setSecureCopyFlag}
             />
-          </div>
+          </div>}
 
           {/* Attachments */}
           <div style={{borderTop:`1px solid ${color.bgBorder}`,paddingTop:14}}>
