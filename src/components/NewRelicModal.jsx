@@ -9,6 +9,7 @@ import { X }                         from 'lucide-react'
 import { useTranslation }            from 'react-i18next'
 import { useAuth }                   from '../auth/AuthProvider.jsx'
 import { useToast }                  from './Toast.jsx'
+import { useConfirm }                from './ConfirmModal.jsx'
 import Modal                         from './Modal.jsx'
 import AttachmentList                from './AttachmentList.jsx'
 import { useAttachments }            from '../hooks/useAttachments.js'
@@ -160,6 +161,7 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
   const { color, radius, font } = useTheme()
   const { user }  = useAuth()
   const { push }  = useToast()
+  const { confirm, ConfirmModalUI } = useConfirm()
 
   // Stable tmp id per modal instance (not module-level variable)
   const [tmpRelicId] = useState(makeTmpId)
@@ -212,7 +214,15 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
     return () => registerUnsavedChanges(false)
   }, [isDirty])
 
-  function handleClose() {
+  async function confirmDiscard() {
+    return !isDirty || confirm({
+      title: t('modals.discardTitle'), message: t('modals.discardMessage'), danger: true,
+      confirmLabel: t('modals.discardConfirm'), cancelLabel: t('modals.keepEditing'),
+    })
+  }
+
+  async function handleClose() {
+    if (!(await confirmDiscard())) return
     cleanupOrphans()
     onClose()
   }
@@ -222,7 +232,8 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
     if (picked) setLinkedFile(picked)
   }
 
-  function handleViewExisting(relicId) {
+  async function handleViewExisting(relicId) {
+    if (!(await confirmDiscard())) return
     cleanupOrphans()
     onClose()
     onViewExisting?.(relicId)
@@ -287,6 +298,8 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
   }
 
   return (
+    <>
+    <ConfirmModalUI/>
     <Modal title={t('modals.newRelic.title')} onClose={handleClose}>
       <div style={{display:'flex',flexDirection:'column',gap:14,maxHeight:'72vh',overflowY:'auto',paddingRight:2}}>
 
@@ -396,5 +409,6 @@ export default function NewRelicModal({ onClose, onAdd, relics = [], onViewExist
         </button>
       </div>
     </Modal>
+    </>
   )
 }

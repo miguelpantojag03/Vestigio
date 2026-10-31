@@ -113,7 +113,7 @@ export default function Dashboard() {
     searchCause, setSearchCause,
     searchDateFrom, setSearchDateFrom, searchDateTo, setSearchDateTo,
     loading, loadFailed, reload,
-    stats, add, update, revive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
+    stats, add, update, revive, rearchive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
   } = useRelics(user?.id, currentProjectId)
 
   const hasSearchActivity = section === 'search'
@@ -196,8 +196,20 @@ export default function Dashboard() {
 
   // Relic actions
   async function handleRevive(id) {
-    try { await revive(id); push(t('dashboard.toast.revived'), 'success') }
-    catch (err) { push(err.message, 'error') }
+    try {
+      await revive(id)
+      push(t('dashboard.toast.revived'), 'success', 8000, {
+        label: t('common.undo'),
+        onClick: () => handleRearchive(id),
+      })
+    } catch (err) { push(err.message, 'error') }
+  }
+
+  async function handleRearchive(id) {
+    try {
+      await rearchive(id)
+      push(t('dashboard.toast.rearchived'), 'info')
+    } catch (err) { push(err.message, 'error') }
   }
 
   // No confirmation: moving to the trash is reversible, and the toast says how.
@@ -483,6 +495,7 @@ export default function Dashboard() {
           projectName={projects.find(p => p.id === selected?.projectId)?.name}
           onUpdateRelic={update}
           onRevive={handleRevive}
+          onRearchive={handleRearchive}
           onTrash={id => handleTrash([id])}
           onRestore={id => handleRestore([id])}
           onDeleteForever={id => handleDeleteForever([id])}

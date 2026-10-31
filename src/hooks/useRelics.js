@@ -167,6 +167,12 @@ export function useRelics(userId, currentProjectId) {
     return updated
   }, [userId])
 
+  // The way back from reviving: nothing about a revive should be a one-way door.
+  const rearchive = useCallback(
+    (id) => update(id, { status: 'archived', revivedAt: null }),
+    [update]
+  )
+
   const moveToProject = useCallback(async (ids, project) => {
     if (!userId) return
     setRelics(await moveRelicsToProject(userId, ids, project))
@@ -215,6 +221,6 @@ export function useRelics(userId, currentProjectId) {
     searchDateTo,   setSearchDateTo,
     sortField, sortDir, cycleSort,
     loading, loadFailed, reload, stats,
-    add, update, revive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
+    add, update, revive, rearchive, trash, restore, removeForever, emptyTrash, moveToProject, addTag,
   }
 }

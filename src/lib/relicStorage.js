@@ -231,9 +231,9 @@ export async function updateRelic(userId, id, patch) {
         `UPDATE relics SET ${sets.join(',')} WHERE id=$${i++} AND user_id=$${i}`,
         [...vals, id, userId]
       )
-      if (existing.status === 'archived' && patch.status === 'revived') {
+      if ('status' in patch && patch.status !== existing.status) {
         await recordStatusTransition(
-          db, id, 'archived', 'revived', patch.revivedAt ?? new Date().toISOString()
+          db, id, existing.status, patch.status, patch.revivedAt ?? new Date().toISOString()
         )
       }
     } catch (err) {

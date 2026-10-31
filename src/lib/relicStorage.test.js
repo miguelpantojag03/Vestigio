@@ -159,6 +159,29 @@ describe('demo account seed', () => {
   })
 })
 
+describe('status changes', () => {
+  it('records reviving and going back to archived, in the history', async () => {
+    await addRelic(USER, makeRelic('r1'))
+
+    const [revived] = await updateRelic(USER, 'r1', { status: 'revived', revivedAt: 't1' })
+    expect(revived.revived).toBe(true)
+
+    const [back] = await updateRelic(USER, 'r1', { status: 'archived', revivedAt: null })
+    expect(back.revived).toBe(false)
+    expect(back.revivedAt).toBeNull()
+    expect(sqlite.prepare(`SELECT from_status f, to_status t FROM relic_status_history ORDER BY id`).all().map(r => ({ ...r })))
+      .toEqual([{ f: null, t: 'archived' }, { f: 'archived', t: 'revived' }, { f: 'revived', t: 'archived' }])
+  })
+
+  it('does not record a change that did not happen', async () => {
+    await addRelic(USER, makeRelic('r1'))
+
+    await updateRelic(USER, 'r1', { status: 'archived', title: 'renamed' })
+
+    expect(count('relic_status_history')).toBe(1)
+  })
+})
+
 describe('cause of death', () => {
   it('round-trips through add and update, and defaults to none', async () => {
     const [added] = await addRelic(USER, makeRelic('r1', { deathCause: 'budget', deathCauseDetail: 'Funding fell through' }))

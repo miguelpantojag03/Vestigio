@@ -298,15 +298,53 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
   const open = drafts.filter(d => d.status === 'open')
   const archived = drafts.filter(d => d.status === 'archived')
 
-  async function handleCreate() {
-    const draft = await create({
-      label: t('relicDetails.drafts.defaultLabel', { n: drafts.length + 1 }),
-      title: relic.title, description: relic.description, notes: relic.notes,
-    })
-    setExpandedId(draft.id)
+  // Every draft action reports a failure rather than dying silently.
+  async function run(action) {
+    try { await action() }
+    catch (err) {
+      console.error('[DraftsSection]', err)
+      push(t('relicDetails.drafts.actionError'), 'error')
+    }
   }
 
-  async function handlePromote(draft) {
+  const reopen = id => update(id, { status: 'open', archivedReason: null })
+
+  function handleCreate() {
+    return run(async () => {
+      const draft = await create({
+        label: t('relicDetails.drafts.defaultLabel', { n: drafts.length + 1 }),
+        title: relic.title, description: relic.description, notes: relic.notes,
+      })
+      setExpandedId(draft.id)
+    })
+  }
+
+  function handleArchive(draft) {
+    return run(async () => {
+      await archive(draft.id, t('relicDetails.drafts.archivedManually'))
+      push(t('relicDetails.drafts.archived'), 'info', 8000, {
+        label: t('common.undo'),
+        onClick: () => run(() => reopen(draft.id)),
+      })
+    })
+  }
+
+  async function handleRemove(draft) {
+    const ok = await confirm({
+      title: t('relicDetails.drafts.deleteTitle'),
+      message: t('relicDetails.drafts.deleteMessage', { name: draft.label || draft.title }),
+      danger: true, confirmLabel: t('common.delete'),
+    })
+    if (ok) await run(() => remove(draft.id))
+  }
+
+  // Promoting replaces the relic's own text, so the toast can put it back.
+  function handlePromote(draft) {
+    return run(() => promote(draft))
+  }
+
+  async function promote(draft) {
+    const previous = { title: relic.title, description: relic.description, notes: relic.notes }
     await onUpdateRelic(relic.id, { title: draft.title, description: draft.description, notes: draft.notes })
     await archive(draft.id, t('relicDetails.drafts.promotedReason'))
     const others = open.filter(d => d.id !== draft.id)
@@ -319,7 +357,13 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
       })
       if (ok) await Promise.all(others.map(d => archive(d.id, t('relicDetails.drafts.archivedWithPromotion'))))
     }
-    push(t('relicDetails.drafts.promoted'), 'success')
+    push(t('relicDetails.drafts.promoted'), 'success', 8000, {
+      label: t('common.undo'),
+      onClick: () => run(async () => {
+        await onUpdateRelic(relic.id, previous)
+        await reopen(draft.id)
+      }),
+    })
   }
 
   return (
@@ -344,15 +388,15 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
                 {d.label || d.title || t('relicDetails.drafts.untitled')}
               </span>
               <button onClick={e=>{e.stopPropagation();handlePromote(d)}} title={t('relicDetails.drafts.promote')}
-                style={{background:'none',border:'none',cursor:'pointer',color:color.sage500,padding:3,display:'flex'}}>
+                style={{background:'none',border:'none',cursor:'pointer',color:color.sage500,padding:6,display:'flex'}}>
                 <ArrowUpCircle size={13}/>
               </button>
-              <button onClick={e=>{e.stopPropagation();archive(d.id, t('relicDetails.drafts.archivedManually'))}} title={t('relicDetails.drafts.archive')}
-                style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:3,display:'flex'}}>
+              <button onClick={e=>{e.stopPropagation();handleArchive(d)}} title={t('relicDetails.drafts.archive')}
+                style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6,display:'flex'}}>
                 <Archive size={12}/>
               </button>
-              <button onClick={e=>{e.stopPropagation();remove(d.id)}} title={t('common.delete')}
-                style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:3,display:'flex'}}>
+              <button onClick={e=>{e.stopPropagation();handleRemove(d)}} title={t('common.delete')}
+                style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6,display:'flex'}}>
                 <Trash2 size={12}/>
               </button>
               {expandedId===d.id ? <ChevronUp size={12} style={{color:color.textSecondary}}/> : <ChevronDown size={12} style={{color:color.textSecondary}}/>}
@@ -368,11 +412,19 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
           </button>
         )}
         {showArchived && archived.map(d => (
-          <div key={d.id} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 8px',opacity:0.6}}>
+          <div key={d.id} style={{display:'flex',alignItems:'center',gap:6,padding:'5px 8px'}}>
             <span style={{flex:1,fontSize:11,color:color.textSecondary,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
               {d.label || d.title || t('relicDetails.drafts.untitled')}
             </span>
             <span style={{fontSize:10,color:color.textTertiary}}>{d.archivedReason}</span>
+            <button onClick={()=>run(()=>reopen(d.id))} title={t('relicDetails.restore')} aria-label={t('relicDetails.restore')}
+              style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6,display:'flex'}}>
+              <Undo2 size={12}/>
+            </button>
+            <button onClick={()=>handleRemove(d)} title={t('common.delete')} aria-label={t('common.delete')}
+              style={{background:'none',border:'none',cursor:'pointer',color:color.textSecondary,padding:6,display:'flex'}}>
+              <Trash2 size={12}/>
+            </button>
           </div>
         ))}
       </div>
@@ -381,7 +433,7 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
 }
 
 /* ─── main component ──────────────────────────────────────────────── */
-export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevive, onTrash, onRestore, onDeleteForever, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
+export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevive, onRearchive, onTrash, onRestore, onDeleteForever, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
   const { t } = useTranslation()
   const { color, font } = useTheme()
   const { user } = useAuth()
@@ -584,6 +636,12 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
               onMouseEnter={e=>e.currentTarget.style.background=color.blue600}
               onMouseLeave={e=>e.currentTarget.style.background=color.blue500}>
               <RotateCcw size={13}/> {t('relicDetails.reviveNow')}
+            </button>
+          )}
+          {!inTrash && relic.revived && (
+            <button onClick={()=>onRearchive(relic.id)}
+              style={{width:'100%',padding:'10px 0',borderRadius:8,background:'transparent',color:color.textPrimary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer',border:`1px solid ${color.bgBorder}`,display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+              <Archive size={13}/> {t('relicDetails.rearchive')}
             </button>
           )}
           <button onClick={()=>inTrash ? onDeleteForever(relic.id) : onTrash(relic.id)}

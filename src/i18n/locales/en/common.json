@@ -212,6 +212,7 @@
       "emptyTrashTitle": "Empty the trash?",
       "emptyTrashConfirm": "Empty trash",
       "trashEmptied": "Trash emptied.",
+      "rearchived": "The relic went back to the archive.",
       "tagLimit_one": "{{count}} relic didn't get the tag: it already has the maximum of {{max}}.",
       "tagLimit_other": "{{count}} relics didn't get the tag: they already have the maximum of {{max}}.",
       "moved_one": "Relic moved to \"{{project}}\".",
@@ -263,6 +264,7 @@
     "reviveNow": "Revive Now",
     "deleteForever": "Delete Forever",
     "moveToTrash": "Move to Trash",
+    "rearchive": "Move Back to Archive",
     "restore": "Restore",
     "viewOverlay": "View",
     "drafts": {
@@ -274,6 +276,10 @@
       "notesPlaceholder": "Notes…",
       "autosaveHint": "Saves on its own while you type.",
       "defaultLabel": "Draft {{n}}",
+      "archived": "Draft archived.",
+      "deleteTitle": "Delete this draft?",
+      "deleteMessage": "What's written in «{{name}}» will be lost. This can't be undone.",
+      "actionError": "The draft action could not be completed. Try again.",
       "untitled": "Untitled",
       "promote": "Promote to active version",
       "archive": "Archive this draft",
@@ -306,6 +312,10 @@
   },
   "imageViewer": { "close": "Close", "rotate": "Rotate" },
   "modals": {
+    "discardTitle": "Discard what you wrote?",
+    "discardMessage": "If you close now, your unsaved changes will be lost.",
+    "discardConfirm": "Discard",
+    "keepEditing": "Keep editing",
     "newRelic": {
       "title": "New Relic",
       "generalInfo": "General Information",

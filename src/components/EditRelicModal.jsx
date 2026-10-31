@@ -177,6 +177,17 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
     return () => registerUnsavedChanges(false)
   }, [isDirty])
 
+  async function handleClose() {
+    if (isDirty) {
+      const ok = await confirm({
+        title: t('modals.discardTitle'), message: t('modals.discardMessage'), danger: true,
+        confirmLabel: t('modals.discardConfirm'), cancelLabel: t('modals.keepEditing'),
+      })
+      if (!ok) return
+    }
+    onClose()
+  }
+
   async function handleAddFiles(files){setAttError(null);try{await addFiles(files)}catch(err){setAttError(err.message)}}
 
   async function handlePickFile() {
@@ -243,7 +254,7 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
   return (
     <>
       <ConfirmModalUI/>
-      <Modal title={t('modals.editRelic.title')} onClose={onClose}>
+      <Modal title={t('modals.editRelic.title')} onClose={handleClose}>
         <div style={{display:'flex',flexDirection:'column',gap:14,maxHeight:'72vh',overflowY:'auto',paddingRight:2}}>
 
           <div style={S.sec}>{t('modals.newRelic.generalInfo')}</div>
@@ -321,7 +332,7 @@ export default function EditRelicModal({ relic, onClose, onSave }) {
 
         {/* Footer */}
         <div style={{display:'flex',gap:10,marginTop:18}}>
-          <button onClick={onClose} style={{flex:1,padding:'9px 0',borderRadius:8,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.textSecondary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer'}}>{t('common.cancel')}</button>
+          <button onClick={handleClose} style={{flex:1,padding:'9px 0',borderRadius:8,border:`1px solid ${color.bgBorder}`,background:'transparent',color:color.textSecondary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:'pointer'}}>{t('common.cancel')}</button>
           <button onClick={handleSave} disabled={saving}
             style={{flex:2,padding:'9px 0',borderRadius:8,border:'none',background:saving?color.blue600:color.blue500,color:color.onPrimary,fontSize:13,fontWeight:600,fontFamily:font.ui,cursor:saving?'not-allowed':'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,transition:'background 0.12s'}}
             onMouseEnter={e=>{if(!saving)e.currentTarget.style.background=color.blue600}}
