@@ -40,13 +40,18 @@ export function useRelics(userId, currentProjectId) {
   useEffect(() => {
     if (!userId) return
     let cancelled = false
-    getRelics(userId).then(data => {
-      if (cancelled) return
-      setRelics(data)
-      const revived = data.find(r => r.revived)
-      setSelectedId(revived?.id ?? data[0]?.id ?? null)
-      setLoadedUserId(userId)
-    })
+    getRelics(userId)
+      .catch(err => {
+        console.error('[useRelics] Failed to load relics:', err)
+        return []
+      })
+      .then(data => {
+        if (cancelled) return
+        setRelics(data)
+        const revived = data.find(r => r.revived)
+        setSelectedId(revived?.id ?? data[0]?.id ?? null)
+        setLoadedUserId(userId)
+      })
     return () => { cancelled = true }
   }, [userId])
 
@@ -111,11 +116,14 @@ export function useRelics(userId, currentProjectId) {
   // Derived, not mirrored into state: if the stored selectedId doesn't
   // belong to the current project (e.g. right after switching projects),
   // fall back to a sensible default within it instead of showing nothing.
+  // The global search is the exception: its results cross projects, so
+  // falling back there would open (and let you delete) a different relic
+  // from the one that was clicked.
   const selected = useMemo(() => {
     const direct = relics.find(r => r.id === selectedId)
-    if (direct && (!currentProjectId || direct.projectId === currentProjectId)) return direct
+    if (direct && (section === 'search' || !currentProjectId || direct.projectId === currentProjectId)) return direct
     return projectRelics.find(r => r.revived) ?? projectRelics[0] ?? null
-  }, [relics, selectedId, currentProjectId, projectRelics])
+  }, [relics, selectedId, section, currentProjectId, projectRelics])
 
   // stats — scoped to the current project, same as everything else in view
   const stats = useMemo(() => ({

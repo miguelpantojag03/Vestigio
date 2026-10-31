@@ -48,11 +48,13 @@ export async function renameProject(id, name) {
     `UPDATE projects SET name = $1, updated_at = $2 WHERE id = $3`,
     [name.trim(), new Date().toISOString(), id]
   )
+  // relics.project is a denormalized copy of the name (the CSV/JSON exports read it).
+  await db.execute(`UPDATE relics SET project = $1 WHERE project_id = $2`, [name.trim(), id])
 }
 
 /** Deletes the project. Its relics are kept, orphaned to project_id = NULL. */
 export async function deleteProject(id) {
   const db = await getDb()
-  await db.execute(`UPDATE relics SET project_id = NULL WHERE project_id = $1`, [id])
+  await db.execute(`UPDATE relics SET project_id = NULL, project = '' WHERE project_id = $1`, [id])
   await db.execute(`DELETE FROM projects WHERE id = $1`, [id])
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   RotateCcw, Trash2, Pencil, Paperclip, Expand,
@@ -143,13 +143,19 @@ function AIAnalysisBlock({ analysis, loading, onRequest }) {
 function LinkedFileSection({ relic, onUpdateRelic, color, font, t, push }) {
   const [status, setStatus] = useState('none')
   const [busy,   setBusy]   = useState(false)
+  const { linkedFilePath, linkedFileMtime } = relic
 
   useEffect(() => {
-    if (!relic.linkedFilePath) return
+    if (!linkedFilePath) return
     let cancelled = false
-    getLinkStatus(relic).then(s => { if (!cancelled) setStatus(s) })
+    getLinkStatus({ linkedFilePath, linkedFileMtime })
+      .then(s => { if (!cancelled) setStatus(s) })
+      .catch(err => {
+        console.error('[RelicDetails] Could not check linked file:', err)
+        if (!cancelled) setStatus('broken')
+      })
     return () => { cancelled = true }
-  }, [relic.id, relic.linkedFilePath, relic.linkedFileMtime])
+  }, [linkedFilePath, linkedFileMtime])
 
   if (!relic.linkedFilePath) return null
 
@@ -164,12 +170,15 @@ function LinkedFileSection({ relic, onUpdateRelic, color, font, t, push }) {
   }
 
   async function handleRelink() {
-    const picked = await pickFileToLink()
-    if (!picked) return
     setBusy(true)
     try {
+      const picked = await pickFileToLink()
+      if (!picked) return
       await onUpdateRelic(relic.id, { linkedFilePath: picked.path, linkedFileMtime: picked.mtime })
       push(t('relicDetails.linkedFile.relinked'), 'success')
+    } catch (err) {
+      // Tauri commands reject with a plain string, not an Error.
+      push(err?.message ?? t('relicDetails.linkedFile.openError'), 'error')
     } finally { setBusy(false) }
   }
 
@@ -246,16 +255,27 @@ function DraftEditor({ draft, onChange, color, font, t }) {
   const [title, setTitle] = useState(draft.title)
   const [description, setDescription] = useState(draft.description)
   const [notes, setNotes] = useState(draft.notes)
+  const pendingRef = useRef(null)
 
   useEffect(() => {
+    const changed = title !== draft.title || description !== draft.description || notes !== draft.notes
+    const patch = { title, description, notes }
+    pendingRef.current = changed ? patch : null
+    if (!changed) return
     const timer = setTimeout(() => {
-      if (title !== draft.title || description !== draft.description || notes !== draft.notes) {
-        onChange({ title, description, notes })
-      }
+      pendingRef.current = null
+      onChange(patch)
     }, 600)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title, description, notes])
+
+  // Collapsing the editor or switching relics mid-debounce must not lose
+  // what was just typed — the UI promises this autosaves.
+  useEffect(() => () => {
+    if (pendingRef.current) onChange(pendingRef.current)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const inputStyle = { width:'100%', padding:'6px 8px', borderRadius:6, background:color.bgBase, border:`1px solid ${color.bgBorder}`, color:color.textPrimary, fontSize:11, fontFamily:font.ui, outline:'none' }
   return (
@@ -361,7 +381,7 @@ function DraftsSection({ relic, onUpdateRelic, color, font, t, push }) {
 }
 
 /* ─── main component ──────────────────────────────────────────────── */
-export default function RelicDetails({ relic, onUpdateRelic, onRevive, onDelete, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
+export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevive, onDelete, onEdit, onAnalyze, aiAnalysis, aiLoading }) {
   const { t } = useTranslation()
   const { color, font } = useTheme()
   const { user } = useAuth()
@@ -515,7 +535,7 @@ export default function RelicDetails({ relic, onUpdateRelic, onRevive, onDelete,
           {/* metadata */}
           <div style={{border:`1px solid ${color.bgBorder}`,borderRadius:10,overflow:'hidden'}}>
             {[
-              {label:t('relicDetails.project'),  value:relic.project},
+              {label:t('relicDetails.project'),  value:projectName},
               {label:t('relicDetails.category'), value:t(`relicCard.category.${relic.category}`, relic.category)},
               {label:t('relicDetails.created'),  value:formatDate(relic.createdAt??relic.created)},
               {label:t('relicDetails.discarded'),value:formatDate(relic.discardedAt??relic.discarded)},

@@ -40,12 +40,14 @@ export default function RelicCard({ relic, isSelected, onSelect, onCardDrag, onC
     return onRelicDataChanged(relic.id, loadCounts)
   }, [relic?.id])
 
+  const linkedFilePath = relic?.linkedFilePath
+  const linkedFileMtime = relic?.linkedFileMtime
   useEffect(() => {
-    if (!relic?.linkedFilePath) return
+    if (!linkedFilePath) return
     let cancelled = false
-    getLinkStatus(relic).then(s => { if (!cancelled) setLinkBroken(s === 'broken') }).catch(() => {})
+    getLinkStatus({ linkedFilePath, linkedFileMtime }).then(s => { if (!cancelled) setLinkBroken(s === 'broken') }).catch(() => {})
     return () => { cancelled = true }
-  }, [relic?.id, relic?.linkedFilePath, relic?.linkedFileMtime])
+  }, [linkedFilePath, linkedFileMtime])
 
   return (
     <motion.div

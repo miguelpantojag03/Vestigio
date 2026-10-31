@@ -28,6 +28,9 @@ export function useProjects(userId) {
       const valid = list.find(p => p.id === saved)
       setCurrentProjectId((valid ?? list[0]).id)
       setLoadedUserId(userId)
+    }).catch(err => {
+      console.error('[useProjects] Failed to load projects:', err)
+      if (!cancelled) setLoadedUserId(userId)
     })
     return () => { cancelled = true }
   }, [userId])
@@ -53,12 +56,10 @@ export function useProjects(userId) {
 
   const remove = useCallback(async (id) => {
     await deleteProject(id)
-    setProjects(prev => {
-      const next = prev.filter(p => p.id !== id)
-      if (currentProjectId === id && next.length > 0) switchProject(next[0].id)
-      return next
-    })
-  }, [currentProjectId, switchProject])
+    const next = projects.filter(p => p.id !== id)
+    setProjects(next)
+    if (currentProjectId === id && next.length > 0) switchProject(next[0].id)
+  }, [projects, currentProjectId, switchProject])
 
   const currentProject = projects.find(p => p.id === currentProjectId) ?? null
 

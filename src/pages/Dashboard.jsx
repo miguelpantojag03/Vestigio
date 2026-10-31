@@ -80,7 +80,7 @@ export default function Dashboard() {
   } = useProjects(user?.id)
 
   const {
-    relics, visible, selected, selectedId, setSelectedId,
+    relics, visible, selected, setSelectedId,
     filter, setFilter, section, setSection,
     search, setSearch, sortField, sortDir, cycleSort,
     searchCategory, setSearchCategory, searchStatus, setSearchStatus,
@@ -185,8 +185,17 @@ export default function Dashboard() {
     setAiLoadingId(null)
   }
 
-  // Highlight a relic from AI insights
-  function handleHighlight(id) { setSelectedId(id) }
+  // Jump to a relic from anywhere that lists the whole archive (AI insights,
+  // the déjà-vu warning): it may live in another project, or in none, and
+  // would otherwise silently fail to open.
+  function focusRelic(id) {
+    const relic = relics.find(r => r.id === id)
+    if (relic && section !== 'search') {
+      if (!relic.projectId) setSection('search')
+      else if (relic.projectId !== currentProjectId) switchProject(relic.projectId)
+    }
+    setSelectedId(id)
+  }
 
   return (
     <div style={{display:'flex',flexDirection:'column',height:'100vh',background:color.bgBase,overflow:'hidden'}}>
@@ -242,7 +251,7 @@ export default function Dashboard() {
 
               {/* AI Insights */}
               <div style={{marginBottom:20}}>
-                <AIInsightsPanel relics={relics} onHighlight={handleHighlight}/>
+                <AIInsightsPanel relics={relics} onHighlight={focusRelic}/>
               </div>
 
               {/* Grid — responsive */}
@@ -258,7 +267,7 @@ export default function Dashboard() {
                     {visible.map((r,i)=>(
                       <RelicCard
                         key={r.id} relic={r} animIndex={i}
-                        isSelected={r.id===selectedId}
+                        isSelected={r.id===selected?.id}
                         onSelect={setSelectedId}
                         onCardDrag={handleCardDrag}
                         onCardDragEnd={handleCardDragEnd}
@@ -280,6 +289,7 @@ export default function Dashboard() {
         {/* Right panel */}
         <RelicDetails
           relic={selected}
+          projectName={projects.find(p => p.id === selected?.projectId)?.name}
           onUpdateRelic={update}
           onRevive={handleRevive}
           onDelete={handleDelete}
@@ -296,7 +306,7 @@ export default function Dashboard() {
           onClose={()=>setShowNew(false)}
           onAdd={handleAddRelic}
           relics={relics}
-          onViewExisting={setSelectedId}
+          onViewExisting={focusRelic}
           projectId={currentProjectId}
           projectName={currentProject?.name}
         />
