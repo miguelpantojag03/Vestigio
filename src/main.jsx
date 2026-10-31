@@ -21,14 +21,20 @@ function CloseGuard() {
   useEffect(() => {
     if (!window.__TAURI_INTERNALS__) return
     let unlisten
+    let cancelled = false
     import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
       getCurrentWindow().onCloseRequested((event) => {
         if (hasUnsavedChanges() && !window.confirm(t('app.unsavedChangesConfirm'))) {
           event.preventDefault()
         }
-      }).then(fn => { unlisten = fn })
+      }).then(fn => {
+        // This effect can be torn down before the listener finishes
+        // registering — drop it here or the close handler runs twice.
+        if (cancelled) fn()
+        else unlisten = fn
+      })
     })
-    return () => unlisten?.()
+    return () => { cancelled = true; unlisten?.() }
   }, [t])
   return null
 }
@@ -66,7 +72,13 @@ class ErrorBoundary extends Component {
 // so this would otherwise hard-crash the app on startup with a cryptic
 // IPC error. Skip it there; the real dev loop is `npm run tauri dev`.
 if (window.__TAURI_INTERNALS__) {
-  await migrateLegacyData()
+  // Runs before the first render: a failure here must not leave the window
+  // blank forever, with no ErrorBoundary mounted yet to report it.
+  try {
+    await migrateLegacyData()
+  } catch (err) {
+    console.error('[main] Legacy data migration failed:', err)
+  }
 } else {
   console.warn('[main] Not running inside Tauri — skipping SQLite migration. Relic/attachment data will not load. Use `npm run tauri dev`.')
 }
