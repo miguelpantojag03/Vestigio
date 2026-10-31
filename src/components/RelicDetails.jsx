@@ -111,7 +111,7 @@ function AIAnalysisBlock({ analysis, loading, onRequest }) {
   const { color } = useTheme()
   if (loading) return (
     <div style={{padding:'10px 12px',borderRadius:8,background:alpha(color.blue500, 0.08),border:`1px solid ${alpha(color.blue500, 0.2)}`,fontSize:11,color:color.blue300,display:'flex',alignItems:'center',gap:8}}>
-      <Sparkles size={12} style={{animation:'am-spin 1s linear infinite'}}/>
+      <Sparkles size={12} className="am-spin"/>
       {t('relicDetails.aiAnalyzing')}
     </div>
   )
@@ -598,7 +598,6 @@ export default function RelicDetails({ relic, projectName, onUpdateRelic, onRevi
       {/* fullscreen viewer */}
       {viewer && <ImageViewer src={viewer.src} title={viewer.title} onClose={()=>setViewer(null)}/>}
 
-      <style>{`@keyframes am-spin{to{transform:rotate(360deg)}}`}</style>
     </aside>
   )
 }

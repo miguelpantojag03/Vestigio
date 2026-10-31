@@ -67,7 +67,7 @@ export default function AttachmentList({
             {attachments.length}
           </span>
         )}
-        {loading && <Loader size={12} style={{ color: color.textSecondary, animation: 'am-spin 0.8s linear infinite' }} />}
+        {loading && <Loader size={12} className="am-spin" style={{ color: color.textSecondary }} />}
       </div>
 
       {/* Error banner */}
@@ -139,7 +139,6 @@ export default function AttachmentList({
         />
       )}
 
-      <style>{`@keyframes am-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }

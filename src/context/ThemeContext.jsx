@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+import { flushSync } from 'react-dom'
 import { palettes, font, radius, spring } from '../styles/tokens.js'
 import { THEME_KEY } from '../constants/storageKeys.js'
 
@@ -37,7 +38,12 @@ export function ThemeProvider({ children }) {
   }, [resolvedTheme])
 
   const setMode = useCallback((next) => {
-    setModeState(next)
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (document.startViewTransition && !reduced) {
+      document.startViewTransition(() => flushSync(() => setModeState(next)))
+    } else {
+      setModeState(next)
+    }
     // Best-effort persistence — private browsing / storage-disabled shouldn't block theme switching
     try { localStorage.setItem(THEME_KEY, next) } catch { /* ignored */ }
   }, [])

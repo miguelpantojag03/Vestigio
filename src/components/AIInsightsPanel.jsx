@@ -42,7 +42,7 @@ export default function AIInsightsPanel({ relics, onHighlight }) {
         }}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <div style={{width:28,height:28,borderRadius:8,background:alpha(color.blue500, 0.2),display:'flex',alignItems:'center',justifyContent:'center'}}>
-            <Sparkles size={14} style={{color:color.blue300,animation:loading?'am-spin 1s linear infinite':'none'}}/>
+            <Sparkles size={14} className={loading?'am-spin':undefined} style={{color:color.blue300}}/>
           </div>
           <div style={{textAlign:'left'}}>
             <div style={{fontSize:13,fontWeight:700,color:color.textPrimary}}>
@@ -131,7 +131,6 @@ export default function AIInsightsPanel({ relics, onHighlight }) {
         <div style={{padding:'0 16px 12px',fontSize:11,color:color.terracotta500}}>{error}</div>
       )}
 
-      <style>{`@keyframes am-spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }

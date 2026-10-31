@@ -118,7 +118,7 @@ function DescriptionEnhancer({ title, description, onApply }) {
         style={{display:'flex',alignItems:'center',gap:6,padding:'5px 10px',borderRadius:7,border:`1px solid ${alpha(color.blue500, 0.35)}`,background:alpha(color.blue500, 0.06),color:done?color.sage500:color.blue300,fontSize:11,fontWeight:600,fontFamily:'inherit',cursor:loading||!title.trim()?'not-allowed':'pointer',opacity:!title.trim()?0.5:1,transition:'background 0.12s'}}
         onMouseEnter={e=>{if(!loading&&title.trim())e.currentTarget.style.background=alpha(color.blue500, 0.14)}}
         onMouseLeave={e=>e.currentTarget.style.background=alpha(color.blue500, 0.06)}>
-        <Sparkles size={12} style={{animation:loading?'am-spin 0.8s linear infinite':'none'}}/>
+        <Sparkles size={12} className={loading?'am-spin':undefined}/>
         {loading?t('modals.editRelic.enhancing'):done?`✓ ${t('modals.editRelic.applied')}`:`✦ ${t('modals.editRelic.enhanceWithAI')}`}
       </button>
       {error&&<span style={{fontSize:10,color:color.terracotta500,marginTop:4,display:'block'}}>{error}</span>}

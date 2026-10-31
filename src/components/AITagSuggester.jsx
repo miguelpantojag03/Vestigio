@@ -47,7 +47,7 @@ export default function AITagSuggester({ title, description, category, currentTa
         }}
         onMouseEnter={e=>{if(!loading&&title.trim()){e.currentTarget.style.background=alpha(color.blue500, 0.14);e.currentTarget.style.borderColor=color.blue300}}}
         onMouseLeave={e=>{e.currentTarget.style.background=alpha(color.blue500, 0.06);e.currentTarget.style.borderColor=alpha(color.blue500, 0.35)}}>
-        <Sparkles size={12} style={{ animation: loading ? 'am-spin 0.8s linear infinite' : 'none' }}/>
+        <Sparkles size={12} className={loading ? 'am-spin' : undefined}/>
         {loading ? t('ai.suggesting') : t('ai.suggestTags')}
       </button>
 
@@ -82,7 +82,6 @@ export default function AITagSuggester({ title, description, category, currentTa
         <span style={{ fontSize:10, color:color.terracotta500, marginTop:5, display:'block' }}>{error}</span>
       )}
 
-      <style>{`@keyframes am-spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 }
